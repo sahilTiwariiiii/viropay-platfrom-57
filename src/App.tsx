@@ -1,0 +1,65 @@
+
+import { Toaster } from "@/components/ui/toaster";
+import { Toaster as Sonner } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Routes, Route, Navigate, Outlet } from "react-router-dom";
+import Applications from "./pages/Applications";
+import ApplicationDetails from "./pages/ApplicationDetails";
+import AddApplication from "./pages/AddApplication";
+import Discovery from "./pages/Discovery";
+import NotFound from "./pages/NotFound";
+import Integrations from "./pages/Integrations";
+import Settings from "./pages/Settings";
+import Calendar from "./pages/Calendar";
+import Procurement from "./pages/Procurement";
+import Dashboard from "./pages/Dashboard";
+import Sidebar from "./components/layout/Sidebar";
+
+// Create a layout component that includes the sidebar
+const AppLayout = () => {
+  return (
+    <div className="flex h-screen overflow-hidden">
+      <Sidebar />
+      <div className="flex-1 overflow-auto">
+        <Outlet />
+      </div>
+    </div>
+  );
+};
+
+// Fix for the redirect - use Navigate component instead of window.location
+const RedirectToDemoSite = () => {
+  return <Navigate to="/demo/dashboard" replace />;
+};
+
+const queryClient = new QueryClient();
+
+const App = () => (
+  <QueryClientProvider client={queryClient}>
+    <TooltipProvider>
+      <Toaster />
+      <Sonner position="top-right" />
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<RedirectToDemoSite />} />
+          <Route path="/demo" element={<Navigate to="/demo/dashboard" replace />} />
+          <Route path="/demo" element={<AppLayout />}>
+            <Route path="dashboard" element={<Dashboard />} />
+            <Route path="applications" element={<Applications />} />
+            <Route path="applications/add" element={<AddApplication />} />
+            <Route path="application/:id" element={<ApplicationDetails />} />
+            <Route path="discovery" element={<Discovery />} />
+            <Route path="integrations" element={<Integrations />} />
+            <Route path="settings" element={<Settings />} />
+            <Route path="calendar" element={<Calendar />} />
+            <Route path="procurement" element={<Procurement />} />
+            <Route path="*" element={<NotFound />} />
+          </Route>
+        </Routes>
+      </BrowserRouter>
+    </TooltipProvider>
+  </QueryClientProvider>
+);
+
+export default App;
