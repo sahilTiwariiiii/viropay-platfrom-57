@@ -53,8 +53,6 @@ const App = () => (
           <Route path="/demo" element={<Navigate to="/demo/dashboard" replace />} />
           <Route path="/demo" element={<AppLayout />}>
             <Route path="dashboard" element={<Dashboard />} />
-            <Route path="applications" element={<Applications />} />
-            <Route path="applications/add" element={<AddApplication />} />
             <Route path="application/:id" element={<ApplicationDetails />} />
             <Route path="discovery" element={<Discovery />} />
             <Route path="integrations" element={<Integrations />} />
@@ -62,12 +60,18 @@ const App = () => (
             <Route path="calendar" element={<Calendar />} />
             <Route path="calendar/add" element={<Calendar />} />
             <Route path="categories" element={<CategoryView />} />
-            <Route path="subcategories" element={<ViewSubCategories />} />
-            <Route path="subcategories/add" element={<AddSubCategory />} />
             <Route path="procurement" element={<Procurement />} />
             <Route path="fields" element={<Fields />} />
             <Route path="fields/view" element={<FieldsView />} />
             <Route path="*" element={<NotFound />} />
+          </Route>
+          <Route path="/subcategories" element={<AppLayout />}>
+            <Route index element={<ViewSubCategories />} />
+            <Route path="add" element={<AddSubCategory />} />
+          </Route>
+          <Route path="/category" element={<AppLayout />}>
+            <Route index element={<Applications />} />
+            <Route path="add" element={<AddApplication />} />
           </Route>
         </Routes>
       </BrowserRouter>

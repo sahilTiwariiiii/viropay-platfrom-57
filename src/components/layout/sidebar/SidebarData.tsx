@@ -32,22 +32,22 @@ export const getSidebarMenuItems = (): SidebarMenuItem[] => {
     { 
       icon: <Box className="w-5 h-5" />, 
       label: "Categories", 
-      href: "/demo/applications", 
+      href: "/category", 
       hasSubmenu: true,
       submenuItems: [
-        { label: "View All", href: "/demo/applications" },
-        { label: "Add New", href: "/demo/applications/add" }
+        { label: "View All", href: "/category" },
+        { label: "Add New", href: "/category/add" }
       ],
       category: "modules" 
     },
     { 
       icon: <Calendar className="w-5 h-5" />, 
       label: "Sub Category", 
-      href: "/demo/subcategories", 
+      href: "/subcategories", 
       hasSubmenu: true,
       submenuItems: [
-        { label: "View All", href: "/demo/subcategories" },
-        { label: "Add New", href: "/demo/subcategories/add" }
+        { label: "View All", href: "/subcategories" },
+        { label: "Add New", href: "/subcategories/add" }
       ],
       category: "modules" 
     },
