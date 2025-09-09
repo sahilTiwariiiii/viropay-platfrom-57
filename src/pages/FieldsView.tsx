@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -6,9 +6,16 @@ import { Badge } from '@/components/ui/badge';
 import Header from '@/components/layout/Header';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
 import { Edit, Trash2, Plus } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
+import { Form, FormItem, FormLabel, FormControl, FormDescription, FormMessage, FormField } from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Textarea } from '@/components/ui/textarea';
+import { useForm } from 'react-hook-form';
 
 // Dummy data for fields by subcategory
-const mockFields = {
+const initialMockFields = {
   'Software|CRM Software': [
     { id: '1', name: 'Company Name', type: 'text', required: true },
     { id: '2', name: 'Contact Email', type: 'email', required: true },
@@ -22,17 +29,59 @@ const mockFields = {
   ],
 };
 
+const FIELD_TYPES = [
+  { value: 'text', label: 'Text' },
+  { value: 'email', label: 'Email' },
+  { value: 'number', label: 'Number' },
+  { value: 'date', label: 'Date' },
+  { value: 'image', label: 'Image' },
+  { value: 'radio', label: 'Radio' },
+  { value: 'dropdown', label: 'Dropdown' },
+  { value: 'checkbox', label: 'Checkbox' },
+  { value: 'textarea', label: 'Textarea' },
+];
+
 const FieldsView = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const category = searchParams.get('category') || '';
   const subcategory = searchParams.get('subcategory') || '';
   const key = `${category}|${subcategory}`;
+  const [mockFields, setMockFields] = useState(initialMockFields);
+  const [open, setOpen] = useState(false);
   const fields = mockFields[key] || [];
 
+  const form = useForm({
+    defaultValues: {
+      name: '',
+      type: 'text',
+      required: false,
+      options: '',
+      description: '',
+    },
+  });
+
   const handleAddField = () => {
-    // Implement add field logic or navigation
-    alert('Add new field (to be implemented)');
+    setOpen(true);
+  };
+
+  const onSubmit = (data) => {
+    const newField = {
+      id: Date.now().toString(),
+      name: data.name,
+      type: data.type,
+      required: data.required,
+      options: data.type === 'radio' || data.type === 'dropdown' ? data.options : undefined,
+      description: data.description,
+    };
+    setMockFields((prev) => {
+      const updated = { ...prev };
+      if (!updated[key]) updated[key] = [];
+      updated[key] = [...updated[key], newField];
+      return updated;
+    });
+    setOpen(false);
+    form.reset();
   };
 
   const handleEditField = (id) => {
@@ -61,6 +110,77 @@ const FieldsView = () => {
               <Button onClick={handleAddField} className="bg-saas-blue hover:bg-saas-blue/90">
                 <Plus className="mr-2 h-4 w-4" /> Add Field
               </Button>
+              <Dialog open={open} onOpenChange={setOpen}>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Add New Field</DialogTitle>
+                  </DialogHeader>
+                  <Form {...form}>
+                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                      <FormField name="name" control={form.control} render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Field Name</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Enter field name" {...field} required />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )} />
+                      <FormField name="type" control={form.control} render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Field Type</FormLabel>
+                          <FormControl>
+                            <Select value={field.value} onValueChange={field.onChange}>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select type" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {FIELD_TYPES.map((type) => (
+                                  <SelectItem key={type.value} value={type.value}>{type.label}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )} />
+                      <FormField name="required" control={form.control} render={({ field }) => (
+                        <FormItem className="flex flex-row items-center gap-2">
+                          <FormControl>
+                            <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+                          </FormControl>
+                          <FormLabel>Required</FormLabel>
+                        </FormItem>
+                      )} />
+                      <FormField name="options" control={form.control} render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Options (comma separated)</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Option1, Option2, Option3" {...field} disabled={!(form.watch('type') === 'radio' || form.watch('type') === 'dropdown')} />
+                          </FormControl>
+                          <FormDescription>Only for radio/dropdown fields</FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )} />
+                      <FormField name="description" control={form.control} render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Description</FormLabel>
+                          <FormControl>
+                            <Textarea placeholder="Field description (optional)" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )} />
+                      <DialogFooter>
+                        <Button type="submit" className="bg-saas-blue hover:bg-saas-blue/90">Add Field</Button>
+                        <DialogClose asChild>
+                          <Button type="button" variant="outline">Cancel</Button>
+                        </DialogClose>
+                      </DialogFooter>
+                    </form>
+                  </Form>
+                </DialogContent>
+              </Dialog>
             </div>
             <div className="overflow-x-auto">
               <Table>
