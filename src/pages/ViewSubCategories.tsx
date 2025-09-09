@@ -27,7 +27,7 @@ const ViewSubCategories = () => {
 
   // Handler for add subcategory button
   const handleAddSubCategory = () => {
-    navigate('/addsubcategory');
+    navigate('/subcategories/add');
   };
 
   return (

@@ -32,7 +32,7 @@ export const getSidebarMenuItems = (): SidebarMenuItem[] => {
     { 
       icon: <Box className="w-5 h-5" />, 
       label: "Categories", 
-      href: "/category", 
+      href: "/categories", 
       hasSubmenu: true,
       submenuItems: [
         { label: "View All", href: "/category" },
@@ -54,7 +54,7 @@ export const getSidebarMenuItems = (): SidebarMenuItem[] => {
     { 
       icon: <FileText className="w-5 h-5" />, 
       label: "Fields", 
-      href: "/demo/fields", 
+      href: "/fields", 
       category: "modules" 
     },
     { 

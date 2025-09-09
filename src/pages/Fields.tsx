@@ -38,7 +38,7 @@ const Fields = () => {
   const navigate = useNavigate();
 
   const handleSeeFields = (category, subcategory) => {
-    navigate(`/demo/fields/view?category=${encodeURIComponent(category)}&subcategory=${encodeURIComponent(subcategory)}`);
+  navigate(`/fields/view?category=${encodeURIComponent(category)}&subcategory=${encodeURIComponent(subcategory)}`);
   };
 
   return (
