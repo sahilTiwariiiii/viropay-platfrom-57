@@ -13,8 +13,14 @@ import Integrations from "./pages/Integrations";
 import Settings from "./pages/Settings";
 import Calendar from "./pages/Calendar";
 import Procurement from "./pages/Procurement";
+import Fields from "./pages/Fields";
+import FieldsView from "./pages/FieldsView";
 import Dashboard from "./pages/Dashboard";
 import Sidebar from "./components/layout/Sidebar";
+import ViewSubCategories from "./pages/ViewSubCategories";
+import AddSubCategory from "./pages/AddSubCategory";
+import CategoryView from "./pages/CategoryView";
+// import AllSubCategory from "./components/AllSubCategory";
 
 // Create a layout component that includes the sidebar
 const AppLayout = () => {
@@ -43,6 +49,7 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<RedirectToDemoSite />} />
+           {/* <Route path="/" element={<AllSubCategory />} /> */}
           <Route path="/demo" element={<Navigate to="/demo/dashboard" replace />} />
           <Route path="/demo" element={<AppLayout />}>
             <Route path="dashboard" element={<Dashboard />} />
@@ -53,7 +60,13 @@ const App = () => (
             <Route path="integrations" element={<Integrations />} />
             <Route path="settings" element={<Settings />} />
             <Route path="calendar" element={<Calendar />} />
+            <Route path="calendar/add" element={<Calendar />} />
+            <Route path="categories" element={<CategoryView />} />
+            <Route path="subcategories" element={<ViewSubCategories />} />
+            <Route path="subcategories/add" element={<AddSubCategory />} />
             <Route path="procurement" element={<Procurement />} />
+            <Route path="fields" element={<Fields />} />
+            <Route path="fields/view" element={<FieldsView />} />
             <Route path="*" element={<NotFound />} />
           </Route>
         </Routes>

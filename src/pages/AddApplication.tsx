@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { CalendarIcon, Laptop, Users, DollarSign, Clock, User, Tag } from 'lucide-react';
+import { CalendarIcon, Laptop, Users, DollarSign, Clock, User, Tag, Image, Upload } from 'lucide-react';
+import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 
 import Header from '@/components/layout/Header';
@@ -45,6 +46,7 @@ const formSchema = z.object({
   currency: z.string().default("EUR"),
   paymentFrequency: z.string().min(1, "Please select a payment frequency"),
   lastPaymentDate: z.date(),
+  isActive: z.boolean().default(true),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -87,7 +89,7 @@ const currencies = [
 const AddApplication = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -101,11 +103,32 @@ const AddApplication = () => {
       currency: "EUR",
       paymentFrequency: "Monthly",
       lastPaymentDate: new Date(),
+      isActive: true,
     },
   });
 
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+        form.setValue('logo', reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const onSubmit = (data: FormValues) => {
     console.log("Form submitted with data:", data);
+    
+    // Convert isActive to status for compatibility with existing application structure
+    const newApplication = {
+      ...data,
+      status: data.isActive ? 'active' : 'archived',
+      createdAt: new Date(),
+    };
+    console.log(newApplication);
     
     // Here you would typically send the data to your backend
     // For now, we'll just show a success toast
@@ -121,8 +144,8 @@ const AddApplication = () => {
   return (
     <div className="flex-1 flex flex-col overflow-hidden bg-gray-50">
       <Header
-        title="Add Application Manually"
-        subtitle="Add a new SaaS application to your inventory"
+        title="Add Category Manually"
+        subtitle="Add a new Category"
         showBackButton={true}
       />
       
@@ -131,89 +154,110 @@ const AddApplication = () => {
           <CardContent className="p-6">
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 gap-6">
+
+                  {/* Application Name */}
                   <FormField
                     control={form.control}
                     name="name"
                     render={({ field }) => (
-                      <FormItem className="md:col-span-2">
+                      <FormItem>
                         <FormLabel>
                           <div className="flex items-center gap-2 mb-1">
                             <Laptop className="h-4 w-4 text-muted-foreground" />
-                            <span>Application Name</span>
+                            <span>Name</span>
                           </div>
                         </FormLabel>
                         <FormControl>
-                          <Input placeholder="e.g. Slack, Notion, Figma..." {...field} />
+                          <Input placeholder="Enter category name" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
+
+                  {/* Image Upload */}
+                  <FormItem>
+                    <FormLabel>
+                      <div className="flex items-center gap-2 mb-1">
+                        <Image className="h-4 w-4 text-muted-foreground" />
+                        <span>Application Image</span>
+                      </div>
+                    </FormLabel>
+                    <div className="flex items-center gap-4">
+                      <div className="border border-dashed border-gray-300 rounded-lg p-4 w-full">
+                        <div className="flex flex-col items-center justify-center gap-2">
+                          {imagePreview ? (
+                            <div className="relative w-24 h-24 mb-2">
+                              <img 
+                                src={imagePreview} 
+                                alt="Preview" 
+                                className="w-full h-full object-contain rounded-md"
+                              />
+                              <Button 
+                                type="button" 
+                                variant="outline" 
+                                size="sm" 
+                                className="absolute -top-2 -right-2 h-6 w-6 rounded-full p-0"
+                                onClick={() => {
+                                  setImagePreview(null);
+                                  form.setValue('logo', '');
+                                }}
+                              >
+                                ×
+                              </Button>
+                            </div>
+                          ) : (
+                            <Upload className="h-10 w-10 text-gray-400" />
+                          )}
+                          <div className="text-center">
+                            <p className="text-sm font-medium">
+                              {imagePreview ? 'Change image' : 'Upload an image'}
+                            </p>
+                            <p className="text-xs text-gray-500 mt-1">
+                              PNG, JPG or SVG (max. 2MB)
+                            </p>
+                          </div>
+                          <Input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            id="logo-upload"
+                            onChange={handleImageUpload}
+                          />
+                          <label htmlFor="logo-upload">
+                            <Button 
+                              type="button" 
+                              variant="outline" 
+                              size="sm" 
+                              className="mt-2"
+                              onClick={() => document.getElementById('logo-upload')?.click()}
+                            >
+                              {imagePreview ? 'Replace' : 'Select File'}
+                            </Button>
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+                  </FormItem>
                   
+                  {/* Description */}
                   <FormField
                     control={form.control}
-                    name="category"
+                    name="description"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>
                           <div className="flex items-center gap-2 mb-1">
                             <Tag className="h-4 w-4 text-muted-foreground" />
-                            <span>Category</span>
+                            <span>Description</span>
                           </div>
                         </FormLabel>
-                        <Select 
-                          onValueChange={field.onChange} 
-                          defaultValue={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select a category" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {categories.map((category) => (
-                              <SelectItem key={category} value={category}>
-                                {category}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="owner"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>
-                          <div className="flex items-center gap-2 mb-1">
-                            <User className="h-4 w-4 text-muted-foreground" />
-                            <span>Owner</span>
-                          </div>
-                        </FormLabel>
-                        <FormControl>
-                          <Input placeholder="Who is responsible for this app?" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="description"
-                    render={({ field }) => (
-                      <FormItem className="md:col-span-2">
-                        <FormLabel>Description (Optional)</FormLabel>
                         <FormControl>
                           <Textarea 
-                            placeholder="What is this application used for?"
-                            className="resize-none"
-                            {...field}
+                            placeholder="Brief description of the category" 
+                            className="resize-none" 
+                            {...field} 
                           />
                         </FormControl>
                         <FormMessage />
@@ -221,141 +265,25 @@ const AddApplication = () => {
                     )}
                   />
                   
+                  {/* Active/Inactive */}
                   <FormField
                     control={form.control}
-                    name="users"
+                    name="isActive"
                     render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>
-                          <div className="flex items-center gap-2 mb-1">
-                            <Users className="h-4 w-4 text-muted-foreground" />
-                            <span>Number of Users</span>
-                          </div>
-                        </FormLabel>
+                      <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
                         <FormControl>
-                          <Input type="number" min="0" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="paymentFrequency"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>
-                          <div className="flex items-center gap-2 mb-1">
-                            <Clock className="h-4 w-4 text-muted-foreground" />
-                            <span>Payment Frequency</span>
-                          </div>
-                        </FormLabel>
-                        <Select 
-                          onValueChange={field.onChange} 
-                          defaultValue={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select frequency" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {frequencies.map((frequency) => (
-                              <SelectItem key={frequency} value={frequency}>
-                                {frequency}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="amount"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>
-                          <div className="flex items-center gap-2 mb-1">
-                            <DollarSign className="h-4 w-4 text-muted-foreground" />
-                            <span>Amount</span>
-                          </div>
-                        </FormLabel>
-                        <div className="flex">
-                          <FormControl>
-                            <Input type="number" min="0" step="0.01" {...field} />
-                          </FormControl>
-                          <FormField
-                            control={form.control}
-                            name="currency"
-                            render={({ field: currencyField }) => (
-                              <Select 
-                                onValueChange={currencyField.onChange} 
-                                defaultValue={currencyField.value}
-                              >
-                                <FormControl>
-                                  <SelectTrigger className="w-24 ml-2">
-                                    <SelectValue />
-                                  </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                  {currencies.map((currency) => (
-                                    <SelectItem key={currency.value} value={currency.value}>
-                                      {currency.label}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            )}
-                          />
-                        </div>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="lastPaymentDate"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-col">
-                        <FormLabel>
-                          <div className="flex items-center gap-2 mb-1">
-                            <CalendarIcon className="h-4 w-4 text-muted-foreground" />
-                            <span>Last Payment Date</span>
-                          </div>
-                        </FormLabel>
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <FormControl>
-                              <Button
-                                variant={"outline"}
-                                className={`w-full pl-3 text-left font-normal ${
-                                  !field.value && "text-muted-foreground"
-                                }`}
-                              >
-                                {field.value ? (
-                                  format(field.value, "PPP")
-                                ) : (
-                                  <span>Pick a date</span>
-                                )}
-                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                              </Button>
-                            </FormControl>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0" align="start">
-                            <Calendar
-                              mode="single"
-                              selected={field.value}
-                              onSelect={field.onChange}
-                              initialFocus
+                          <div className="flex items-center space-x-2">
+                            <input
+                              type="checkbox"
+                              checked={field.value}
+                              onChange={field.onChange}
+                              className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                             />
-                          </PopoverContent>
-                        </Popover>
-                        <FormMessage />
+                            <label htmlFor="isActive" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                              Active
+                            </label>
+                          </div>
+                        </FormControl>
                       </FormItem>
                     )}
                   />
@@ -370,7 +298,7 @@ const AddApplication = () => {
                     Cancel
                   </Button>
                   <Button type="submit" className="bg-saas-blue hover:bg-saas-blue/90">
-                    Add Application
+                    Add Category
                   </Button>
                 </div>
               </form>

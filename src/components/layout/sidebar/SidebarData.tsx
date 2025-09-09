@@ -17,21 +17,21 @@ export type SidebarMenuItem = Omit<SidebarItemProps, 'isActive'> & {
 
 export const getSidebarMenuItems = (): SidebarMenuItem[] => {
   return [
-    { 
-      icon: <LayoutDashboard className="w-5 h-5" />, 
-      label: "Dashboard", 
-      href: "/demo/dashboard", 
-      category: "modules" 
-    },
-    { 
-      icon: <Search className="w-5 h-5" />, 
-      label: "Discovery", 
-      href: "/demo/discovery", 
-      category: "modules" 
-    },
+    // { 
+    //   icon: <LayoutDashboard className="w-5 h-5" />, 
+    //   label: "Dashboard", 
+    //   href: "/demo/dashboard", 
+    //   category: "modules" 
+    // },
+    // { 
+    //   icon: <Search className="w-5 h-5" />, 
+    //   label: "Discovery", 
+    //   href: "/demo/discovery", 
+    //   category: "modules" 
+    // },
     { 
       icon: <Box className="w-5 h-5" />, 
-      label: "Applications", 
+      label: "Categories", 
       href: "/demo/applications", 
       hasSubmenu: true,
       submenuItems: [
@@ -42,34 +42,40 @@ export const getSidebarMenuItems = (): SidebarMenuItem[] => {
     },
     { 
       icon: <Calendar className="w-5 h-5" />, 
-      label: "Calendar", 
-      href: "/demo/calendar", 
+      label: "Sub Category", 
+      href: "/demo/subcategories", 
+      hasSubmenu: true,
+      submenuItems: [
+        { label: "View All", href: "/demo/subcategories" },
+        { label: "Add New", href: "/demo/subcategories/add" }
+      ],
       category: "modules" 
     },
     { 
       icon: <FileText className="w-5 h-5" />, 
-      label: "Procurement", 
-      href: "/demo/procurement", 
+      label: "Fields", 
+      href: "/demo/fields", 
       category: "modules" 
     },
     { 
       icon: <Plug className="w-5 h-5" />, 
-      label: "Integrations", 
+      label: "Manage Clients", 
       href: "/demo/integrations", 
       category: "modules" 
     },
-    { 
+     { 
       icon: <Settings className="w-5 h-5" />, 
-      label: "Settings", 
+      label: "Leads", 
       href: "/demo/settings", 
       category: "system" 
     },
     { 
       icon: <HelpCircle className="w-5 h-5" />, 
-      label: "Help & Support", 
+      label: "Lead Clients Manage", 
       href: "/demo/help", 
       category: "system"
     }
+   
   ];
 };
 
