@@ -9,6 +9,7 @@ import ApplicationDetails from "./pages/ApplicationDetails";
 import AddApplication from "./pages/AddApplication";
 import Discovery from "./pages/Discovery";
 import NotFound from "./pages/NotFound";
+import Login from "./pages/Login";
 import Integrations from "./pages/Integrations";
 import Settings from "./pages/Settings";
 import Calendar from "./pages/Calendar";
@@ -16,6 +17,7 @@ import Procurement from "./pages/Procurement";
 import Fields from "./pages/Fields";
 import FieldsView from "./pages/FieldsView";
 import Dashboard from "./pages/Dashboard";
+import RequireAuth from "./components/RequireAuth";
 import Sidebar from "./components/layout/Sidebar";
 import ViewSubCategories from "./pages/ViewSubCategories";
 import AddSubCategory from "./pages/AddSubCategory";
@@ -49,27 +51,30 @@ const App = () => (
       <Sonner position="top-right" />
       <BrowserRouter>
         <Routes>
+          <Route path="/login" element={<Login />} />
           <Route path="/" element={<RedirectToDashboard />} />
           {/* <Route path="/" element={<AllSubCategory />} /> */}
-          <Route path="/" element={<AppLayout />}>
-            <Route path="dashboard" element={<Dashboard />} />
-            <Route path="applications" element={<Applications />} />
-            <Route path="applications/add" element={<AddApplication />} />
-            <Route path="application/:id" element={<ApplicationDetails />} />
-            <Route path="discovery" element={<Discovery />} />
-            <Route path="integrations" element={<Integrations />} />
-            <Route path="settings" element={<Settings />} />
-            <Route path="calendar" element={<Calendar />} />
-            <Route path="calendar/add" element={<Calendar />} />
-            <Route path="categories" element={<CategoryView />} />
-            <Route path="category" element={<CategoryView />} />
-            <Route path="category/add" element={<AddCategory />} />
-            <Route path="subcategories" element={<ViewSubCategories />} />
-            <Route path="subcategories/add" element={<AddSubCategory />} />
-            <Route path="procurement" element={<Procurement />} />
-            <Route path="fields" element={<Fields />} />
-            <Route path="fields/view" element={<FieldsView />} />
-            <Route path="*" element={<NotFound />} />
+          <Route element={<RequireAuth />}>
+            <Route path="/" element={<AppLayout />}>
+              <Route path="dashboard" element={<Dashboard />} />
+              <Route path="applications" element={<Applications />} />
+              <Route path="applications/add" element={<AddApplication />} />
+              <Route path="application/:id" element={<ApplicationDetails />} />
+              <Route path="discovery" element={<Discovery />} />
+              <Route path="integrations" element={<Integrations />} />
+              <Route path="settings" element={<Settings />} />
+              <Route path="calendar" element={<Calendar />} />
+              <Route path="calendar/add" element={<Calendar />} />
+              <Route path="categories" element={<CategoryView />} />
+              <Route path="category" element={<CategoryView />} />
+              <Route path="category/add" element={<AddCategory />} />
+              <Route path="subcategories" element={<ViewSubCategories />} />
+              <Route path="subcategories/add" element={<AddSubCategory />} />
+              <Route path="procurement" element={<Procurement />} />
+              <Route path="fields" element={<Fields />} />
+              <Route path="fields/view" element={<FieldsView />} />
+              <Route path="*" element={<NotFound />} />
+            </Route>
           </Route>
         </Routes>
       </BrowserRouter>
