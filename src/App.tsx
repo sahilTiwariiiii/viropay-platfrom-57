@@ -20,6 +20,7 @@ import Sidebar from "./components/layout/Sidebar";
 import ViewSubCategories from "./pages/ViewSubCategories";
 import AddSubCategory from "./pages/AddSubCategory";
 import CategoryView from "./pages/CategoryView";
+import AddCategory from "./pages/AddCategory";
 // import AllSubCategory from "./components/AllSubCategory";
 
 // Create a layout component that includes the sidebar
@@ -61,6 +62,8 @@ const App = () => (
             <Route path="calendar" element={<Calendar />} />
             <Route path="calendar/add" element={<Calendar />} />
             <Route path="categories" element={<CategoryView />} />
+            <Route path="category" element={<CategoryView />} />
+            <Route path="category/add" element={<AddCategory />} />
             <Route path="subcategories" element={<ViewSubCategories />} />
             <Route path="subcategories/add" element={<AddSubCategory />} />
             <Route path="procurement" element={<Procurement />} />
