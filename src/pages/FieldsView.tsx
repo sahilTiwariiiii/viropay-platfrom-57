@@ -61,17 +61,28 @@ const FieldsView = () => {
     },
   });
 
+  // Clear options field if type is not radio/dropdown
+  React.useEffect(() => {
+    const type = form.watch('type');
+    if (type !== 'radio' && type !== 'dropdown') {
+      form.setValue('options', '');
+    }
+  }, [form.watch('type')]);
+
   const handleAddField = () => {
     setOpen(true);
   };
 
   const onSubmit = (data) => {
+    const optionsArr = (data.type === 'radio' || data.type === 'dropdown') && data.options
+      ? data.options.split(',').map(opt => opt.trim()).filter(Boolean)
+      : undefined;
     const newField = {
       id: Date.now().toString(),
       name: data.name,
       type: data.type,
       required: data.required,
-      options: data.type === 'radio' || data.type === 'dropdown' ? data.options : undefined,
+      options: optionsArr,
       description: data.description,
     };
     setMockFields((prev) => {
@@ -156,7 +167,13 @@ const FieldsView = () => {
                         <FormItem>
                           <FormLabel>Options (comma separated)</FormLabel>
                           <FormControl>
-                            <Input placeholder="Option1, Option2, Option3" {...field} disabled={!(form.watch('type') === 'radio' || form.watch('type') === 'dropdown')} />
+                            <Input
+                              placeholder="Option1, Option2, Option3"
+                              {...field}
+                              value={field.value || ''}
+                              onChange={field.onChange}
+                              disabled={!(form.watch('type') === 'radio' || form.watch('type') === 'dropdown')}
+                            />
                           </FormControl>
                           <FormDescription>Only for radio/dropdown fields</FormDescription>
                           <FormMessage />
@@ -189,6 +206,7 @@ const FieldsView = () => {
                     <TableHead>Name</TableHead>
                     <TableHead>Type</TableHead>
                     <TableHead>Required</TableHead>
+                    <TableHead>Options</TableHead>
                     <TableHead className="w-[80px]">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -209,6 +227,13 @@ const FieldsView = () => {
                             <Badge className="text-xs px-2 py-0.5 bg-red-100 text-red-800 border-red-200">Required</Badge>
                           ) : (
                             <span className="text-xs text-gray-400">Optional</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {Array.isArray(field.options) && field.options.length > 0 ? (
+                            <span className="text-xs text-gray-700">{field.options.join(', ')}</span>
+                          ) : (
+                            <span className="text-xs text-gray-400">-</span>
                           )}
                         </TableCell>
                         <TableCell>
