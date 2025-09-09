@@ -39,7 +39,8 @@ const AddCategory = () => {
         },
     });
 
-    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    // This function now takes a callback to set the field value
+    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, onChange?: (value: string) => void) => {
         const file = e.target.files?.[0];
         if (file) {
             setUploading(true);
@@ -48,6 +49,10 @@ const AddCategory = () => {
                 const url = await uploadFile(file);
                 setImagePreview(url);
                 form.setValue('imageUrl', url, { shouldValidate: true, shouldDirty: true });
+                if (onChange) onChange(url); // update field value as well
+                setTimeout(() => {
+                    console.log('Image URL in form after upload:', form.getValues('imageUrl'));
+                }, 100);
             } catch (err: any) {
                 toast({ title: 'Image upload failed', description: err.message, variant: 'destructive' });
                 setImageFileName(null);
@@ -58,6 +63,7 @@ const AddCategory = () => {
     };
 
     const onSubmit = async (data: FormValues) => {
+        console.log('Submitting category:', data);
         try {
             await addCategory({
                 name: data.name,
@@ -87,7 +93,7 @@ const AddCategory = () => {
                 showBackButton={true}
                 onBackClick={() => navigate('/categories')}
             />
-            
+
             <main className="flex-1 overflow-y-auto p-6 animate-fade-in">
                 <Card className="max-w-4xl mx-auto">
                     <CardContent className="p-6">
@@ -132,15 +138,15 @@ const AddCategory = () => {
                                                         <div className="flex flex-col items-center justify-center gap-2">
                                                             {imagePreview ? (
                                                                 <div className="relative w-24 h-24 mb-2">
-                                                                    <img 
-                                                                        src={imagePreview} 
-                                                                        alt="Preview" 
+                                                                    <img
+                                                                        src={imagePreview}
+                                                                        alt="Preview"
                                                                         className="w-full h-full object-contain rounded-md"
                                                                     />
-                                                                    <Button 
-                                                                        type="button" 
-                                                                        variant="outline" 
-                                                                        size="sm" 
+                                                                    <Button
+                                                                        type="button"
+                                                                        variant="outline"
+                                                                        size="sm"
                                                                         className="absolute -top-2 -right-2 h-6 w-6 rounded-full p-0"
                                                                         onClick={() => {
                                                                             setImagePreview(null);
@@ -171,14 +177,14 @@ const AddCategory = () => {
                                                                 accept="image/*"
                                                                 className="hidden"
                                                                 id="image-upload"
-                                                                onChange={handleImageUpload}
+                                                                onChange={e => handleImageUpload(e, field.onChange)}
                                                                 disabled={uploading}
                                                             />
                                                             <label htmlFor="image-upload">
-                                                                <Button 
-                                                                    type="button" 
-                                                                    variant="outline" 
-                                                                    size="sm" 
+                                                                <Button
+                                                                    type="button"
+                                                                    variant="outline"
+                                                                    size="sm"
                                                                     className="mt-2"
                                                                     onClick={() => document.getElementById('image-upload')?.click()}
                                                                     disabled={uploading}
@@ -207,17 +213,17 @@ const AddCategory = () => {
                                                     </div>
                                                 </FormLabel>
                                                 <FormControl>
-                                                    <Textarea 
-                                                        placeholder="Brief description of the category" 
-                                                        className="resize-none" 
-                                                        {...field} 
+                                                    <Textarea
+                                                        placeholder="Brief description of the category"
+                                                        className="resize-none"
+                                                        {...field}
                                                     />
                                                 </FormControl>
                                                 <FormMessage />
                                             </FormItem>
                                         )}
                                     />
-                                    
+
                                     {/* Active/Inactive */}
                                     <FormField
                                         control={form.control}
@@ -241,11 +247,11 @@ const AddCategory = () => {
                                         )}
                                     />
                                 </div>
-                                
+
                                 <div className="flex justify-end space-x-4 pt-4 border-t">
-                                    <Button 
-                                        type="button" 
-                                        variant="outline" 
+                                    <Button
+                                        type="button"
+                                        variant="outline"
                                         onClick={() => navigate('/categories')}
                                     >
                                         Cancel
