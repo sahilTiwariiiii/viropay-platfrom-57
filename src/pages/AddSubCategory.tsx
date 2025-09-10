@@ -1,6 +1,6 @@
 
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -10,82 +10,88 @@ import Header from '@/components/layout/Header';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { uploadFile } from '@/api/uploadFile';
+import api from '@/api';
+import { getCategories, Category } from '@/api/categories';
 import { Textarea } from '@/components/ui/textarea';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
-const categories = [
-    "Email Marketing",
-    "Scheduling",
-    "Project Management",
-    "CRM",
-    "Issue Tracking",
-    "Authentication",
-    "Communication",
-    "Forms",
-    "Whiteboarding",
-    "Design",
-    "Productivity",
-    "Development",
-    "AI",
-    "Analytics",
-    "Marketing",
-    "Software",
-    "Other"
-];
+// No static categories, will fetch dynamically
 
 const formSchema = z.object({
-    id: z.coerce.number().int().min(1, "ID must be a positive number"),
     name: z.string().min(2, "Subcategory name must be at least 2 characters"),
-    image: z.string().optional(),
     description: z.string().optional(),
-    category: z.string().min(1, "Please select a parent category"),
+    imageUrl: z.string().optional(),
     active: z.boolean().default(true),
 });
-
 type FormValues = z.infer<typeof formSchema>;
 
 const AddSubCategory = () => {
     const navigate = useNavigate();
     const { toast } = useToast();
     const [imagePreview, setImagePreview] = useState<string | null>(null);
+    const [uploadingImage, setUploadingImage] = useState(false);
+    const [categories, setCategories] = useState<Category[]>([]);
+    const [searchParams] = useSearchParams();
+    const categoryId = searchParams.get('categoryId');
+    const categoryName = searchParams.get('categoryName');
+
+    useEffect(() => {
+        getCategories().then(setCategories);
+    }, []);
+
     const form = useForm<FormValues>({
         resolver: zodResolver(formSchema),
         defaultValues: {
-            id: 1,
             name: '',
-            image: '',
+            imageUrl: '',
             description: '',
-            category: '',
             active: true,
         },
     });
 
-    const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                setImagePreview(reader.result as string);
-                form.setValue('image', reader.result as string);
-            };
-            reader.readAsDataURL(file);
+            setUploadingImage(true);
+            try {
+                const url = await uploadFile(file);
+                form.setValue('imageUrl', url.url || url);
+                setImagePreview(url.url || url);
+            } catch {
+                toast({ title: 'Image upload failed', description: 'Please try again', variant: 'destructive' });
+            } finally {
+                setUploadingImage(false);
+            }
         }
     };
 
-    const onSubmit = (data: FormValues) => {
-        toast({
-            title: "Subcategory added",
-            description: `${data.name} has been added to your subcategories.`,
-        });
-        navigate('/subcategories');
+    const onSubmit = async (data: FormValues) => {
+        if (!categoryId) {
+            toast({ title: 'No category selected', description: 'Cannot create subcategory without a parent category', variant: 'destructive' });
+            return;
+        }
+        try {
+            await api.post('/api/v1/subcategories', {
+                name: data.name,
+                description: data.description,
+                imageUrl: data.imageUrl,
+                categoryId: Number(categoryId),
+                active: data.active,
+            });
+            toast({ title: 'Subcategory added', description: `${data.name} has been added.` });
+            navigate(`/subcategories?categoryId=${categoryId}&categoryName=${encodeURIComponent(categoryName || '')}`);
+        } catch {
+            toast({ title: 'Failed to add subcategory', description: 'Please try again', variant: 'destructive' });
+        }
     };
 
     return (
         <div className="flex-1 flex flex-col overflow-hidden bg-gray-50">
             <Header
-                title="Add Subcategory"
-                subtitle="Add a new Subcategory"
+                title={`Add Subcategory to ${categoryName || ''}`}
+                subtitle={categoryName ? `Create a new subcategory under ${categoryName}` : 'Add a new Subcategory'}
                 showBackButton={true}
             />
             <main className="flex-1 overflow-y-auto p-6 animate-fade-in">
@@ -141,7 +147,7 @@ const AddSubCategory = () => {
                                                                 className="absolute -top-2 -right-2 h-6 w-6 rounded-full p-0"
                                                                 onClick={() => {
                                                                     setImagePreview(null);
-                                                                    form.setValue('image', '');
+                                                                    form.setValue('imageUrl', '');
                                                                 }}
                                                             >
                                                                 ×
@@ -164,6 +170,7 @@ const AddSubCategory = () => {
                                                         className="hidden"
                                                         id="image-upload"
                                                         onChange={handleImageUpload}
+                                                        disabled={uploadingImage}
                                                     />
                                                     <label htmlFor="image-upload">
                                                         <Button 
@@ -171,9 +178,10 @@ const AddSubCategory = () => {
                                                             variant="outline" 
                                                             size="sm" 
                                                             className="mt-2"
+                                                            disabled={uploadingImage}
                                                             onClick={() => document.getElementById('image-upload')?.click()}
                                                         >
-                                                            {imagePreview ? 'Replace' : 'Select File'}
+                                                            {uploadingImage ? 'Uploading...' : (imagePreview ? 'Replace' : 'Select File')}
                                                         </Button>
                                                     </label>
                                                 </div>
@@ -205,39 +213,14 @@ const AddSubCategory = () => {
                                         )}
                                     />
 
-                                    {/* Category Dropdown */}
-                                    <FormField
-                                        control={form.control}
-                                        name="category"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel>
-                                                    <div className="flex items-center gap-2 mb-1">
-                                                        <Tag className="h-4 w-4 text-muted-foreground" />
-                                                        <span>Parent Category</span>
-                                                    </div>
-                                                </FormLabel>
-                                                <Select
-                                                    onValueChange={field.onChange}
-                                                    defaultValue={field.value}
-                                                >
-                                                    <FormControl>
-                                                        <SelectTrigger>
-                                                            <SelectValue placeholder="Select a parent category" />
-                                                        </SelectTrigger>
-                                                    </FormControl>
-                                                    <SelectContent>
-                                                        {categories.map((category) => (
-                                                            <SelectItem key={category} value={category}>
-                                                                {category}
-                                                            </SelectItem>
-                                                        ))}
-                                                    </SelectContent>
-                                                </Select>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    />
+                                    {/* Show parent category info */}
+                                    <div className="mb-4">
+                                        <div className="flex items-center gap-2">
+                                            <Tag className="h-4 w-4 text-muted-foreground" />
+                                            <span className="font-medium">Parent Category:</span>
+                                            <span>{categoryName || ''}</span>
+                                        </div>
+                                    </div>
 
                                     {/* Active/Inactive */}
                                     <FormField

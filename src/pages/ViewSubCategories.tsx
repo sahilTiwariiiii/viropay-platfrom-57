@@ -53,9 +53,13 @@ const ViewSubCategories = () => {
     navigate('/categories');
   };
 
-  // Go to add subcategory page
+  // Go to add subcategory page with categoryId and categoryName
   const handleAddSubCategory = () => {
-    navigate('/subcategories/add');
+    if (categoryId && categoryName) {
+      navigate(`/subcategories/add?categoryId=${categoryId}&categoryName=${encodeURIComponent(categoryName)}`);
+    } else {
+      navigate('/subcategories/add');
+    }
   };
 
   return (
