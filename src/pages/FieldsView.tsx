@@ -121,7 +121,11 @@ const FieldsView = () => {
     if (typeEnum === 'CHECKBOX') typeEnum = 'MULTIPLE_CHOICE';
     let options: string | null = null;
     if ((typeEnum === 'RADIO' || typeEnum === 'DROPDOWN' || typeEnum === 'MULTIPLE_CHOICE') && data.options) {
-      const arr = data.options.split(',').map((opt: string) => opt.trim()).filter(Boolean);
+      // Split by comma or any whitespace (one or more spaces/tabs/newlines)
+      const arr = data.options
+        .split(/[,\s]+/)
+        .map((opt: string) => opt.trim())
+        .filter(Boolean);
       options = JSON.stringify(arr);
     }
     let payload = {
