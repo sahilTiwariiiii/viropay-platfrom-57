@@ -198,7 +198,7 @@ const FieldsView = () => {
                     <form onSubmit={form.handleSubmit(onSubmit)} className="grid grid-cols-1 gap-2 w-full text-xs">
                       <FormField name="name" control={form.control} render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-xs font-medium">Field Name</FormLabel>
+                          <FormLabel className="text-xs font-medium">Field Name  - ( not visible to client)</FormLabel>
                           <FormControl>
                             <Input
                               placeholder="Enter field name"
@@ -250,12 +250,12 @@ const FieldsView = () => {
                               {...field}
                               value={field.value || ''}
                               onChange={field.onChange}
-                              disabled={!(form.watch('type') === 'radio' || form.watch('type') === 'dropdown')}
+                              disabled={!(form.watch('type') === 'radio' || form.watch('type') === 'checkbox')}
                               className="rounded border-gray-300 focus:ring-saas-blue focus:border-saas-blue focus:outline-none px-2 py-1 text-xs bg-gray-50 disabled:bg-gray-100"
                               style={{ boxShadow: 'none' }}
                             />
                           </FormControl>
-                          <FormDescription>Only for radio/dropdown fields</FormDescription>
+                          <FormDescription>Only for radio/checkbox fields</FormDescription>
                           <FormMessage />
                         </FormItem>
                       )} />
@@ -272,7 +272,7 @@ const FieldsView = () => {
                       )}
                       <FormField name="description" control={form.control} render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-xs font-medium">Description</FormLabel>
+                          <FormLabel className="text-xs font-medium">Description ( visible to cient )</FormLabel>
                           <FormControl>
                             <Textarea placeholder="Field description (optional)" {...field} className="rounded border-gray-300 focus:ring-saas-blue px-2 py-1 text-xs bg-gray-50" rows={2} />
                           </FormControl>
