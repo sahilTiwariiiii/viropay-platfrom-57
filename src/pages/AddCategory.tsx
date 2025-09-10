@@ -100,13 +100,12 @@ const AddCategory = () => {
         showBackButton={true}
         onBackClick={() => navigate('/categories')}
       />
-
-      <main className="flex-1 overflow-y-auto p-6 animate-fade-in">
-        <Card className="max-w-4xl mx-auto">
-          <CardContent className="p-6">
+      <main className="flex-1 overflow-y-auto p-2 sm:p-4 md:p-6 animate-fade-in">
+        <Card className="w-full max-w-4xl mx-auto">
+          <CardContent className="p-2 sm:p-4 md:p-6">
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-                <div className="grid grid-cols-1 gap-6">
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 sm:space-y-8">
+                <div className="grid grid-cols-1 gap-4 sm:gap-6">
 
                   {/* Category Name */}
                   <FormField
@@ -256,7 +255,6 @@ const AddCategory = () => {
                     )}
                   />
                 </div>
-
                 <div className="flex justify-end space-x-4 pt-4 border-t">
                   <Button
                     type="button"

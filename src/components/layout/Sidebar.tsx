@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { Menu } from 'lucide-react';
 import ViropayLogo from './ViropayLogo';
 import SidebarMenu from './sidebar/SidebarMenu';
 import UserProfile from './sidebar/UserProfile';
@@ -24,36 +25,52 @@ const Sidebar = () => {
   const menuItems = getSidebarMenuItems();
   const menuCategories = getMenuCategories(menuItems);
   
+  const [open, setOpen] = useState(false);
   return (
-    <div className="w-64 h-screen border-r border-border bg-white flex flex-col overflow-hidden">
-      <div className="p-5 border-b border-gray-100 flex justify-center">
-        <span className="font-display text-xl font-semibold text-gray-900">
-          viropay
-        </span>
-      </div>
+    <>
+      {/* Mobile/Tablet Toggle Button */}
+      <button
+        className="fixed top-4 left-4 z-50 bg-white border rounded-md p-2 shadow-md sm:hidden"
+        onClick={() => setOpen((v) => !v)}
+        aria-label="Open sidebar"
+      >
+        <Menu className="h-6 w-6" />
+      </button>
+      {/* Sidebar */}
+      <div
+        className={`w-64 h-screen border-r border-border bg-white flex flex-col overflow-hidden fixed top-0 left-0 z-40 transition-transform duration-300 sm:relative sm:translate-x-0 ${open ? 'translate-x-0' : '-translate-x-full sm:translate-x-0'}`}
+      >
+        <div className="p-5 border-b border-gray-100 flex justify-center">
+          <span className="font-display text-xl font-semibold text-gray-900">
+            viropay
+          </span>
+        </div>
 
-      <ScrollArea className="flex-1">
-        <SidebarMenu 
-          categories={menuCategories}
+        <ScrollArea className="flex-1">
+          <SidebarMenu 
+            categories={menuCategories}
+            searchTerm={searchTerm}
+            onHelpClick={() => setIsHelpDialogOpen(true)}
+          />
+        </ScrollArea>
+
+        <UserProfile />
+
+        <SearchDialog 
+          open={searchDialogOpen}
+          onOpenChange={setSearchDialogOpen}
           searchTerm={searchTerm}
-          onHelpClick={() => setIsHelpDialogOpen(true)}
+          searchResults={globalSearchResults}
         />
-      </ScrollArea>
 
-      <UserProfile />
-
-      <SearchDialog 
-        open={searchDialogOpen}
-        onOpenChange={setSearchDialogOpen}
-        searchTerm={searchTerm}
-        searchResults={globalSearchResults}
-      />
-
-      <HelpDialog 
-        open={isHelpDialogOpen}
-        onOpenChange={setIsHelpDialogOpen}
-      />
-    </div>
+        <HelpDialog 
+          open={isHelpDialogOpen}
+          onOpenChange={setIsHelpDialogOpen}
+        />
+      </div>
+      {/* Overlay for mobile when sidebar is open */}
+      {open && <div className="fixed inset-0 bg-black/30 z-30 sm:hidden" onClick={() => setOpen(false)} />}
+    </>
   );
 };
 

@@ -97,16 +97,16 @@ const CategoryView = () => {
 					showBackButton={true}
 					onBackClick={() => navigate(-1)}
 				/>
-				<main className="flex-1 overflow-y-auto p-6 animate-fade-in">
-					<Card className="max-w-5xl mx-auto mb-8">
-						<CardContent className="p-6">
-							<div className="flex justify-between items-center mb-6">
-								<h2 className="text-xl font-semibold">All Categories</h2>
-								<Button onClick={handleAddCategory} className="bg-saas-blue hover:bg-saas-blue/90">
-									<Plus className="mr-2 h-4 w-4" /> Add Category
-								</Button>
-							</div>
-							   <div className="overflow-x-auto">
+				   <main className="flex-1 overflow-y-auto p-2 sm:p-4 md:p-6 animate-fade-in">
+					   <Card className="w-full max-w-5xl mx-auto mb-8">
+						   <CardContent className="p-2 sm:p-4 md:p-6">
+							   <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+								   <h2 className="text-lg sm:text-xl font-semibold">All Categories</h2>
+								   <Button onClick={handleAddCategory} className="bg-saas-blue hover:bg-saas-blue/90 w-full sm:w-auto">
+									   <Plus className="mr-2 h-4 w-4" /> Add Category
+								   </Button>
+							   </div>
+							   <div className="overflow-x-auto w-full">
 								   {loading ? (
 									   <div className="space-y-2">
 										 {[...Array(5)].map((_, i) => (
