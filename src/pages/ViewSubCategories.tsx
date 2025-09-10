@@ -116,7 +116,7 @@ const ViewSubCategories = () => {
                             </span>
                           </TableCell>
                           <TableCell>
-                            <div className="flex gap-2">
+                            <div className="flex gap-2 whitespace-nowrap">
                               <Button
                                 variant="outline"
                                 size="sm"
@@ -130,6 +130,16 @@ const ViewSubCategories = () => {
                                 }}
                               >
                                 <Pencil className="h-4 w-4 mr-1" /> Edit
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  // Navigate to fields view with category and subcategory
+                                  navigate(`/fields/view?category=${encodeURIComponent(categoryName || '')}&subcategory=${encodeURIComponent(subCategory.name)}`);
+                                }}
+                              >
+                                See Fields
                               </Button>
       {/* Edit Subcategory Dialog */}
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
