@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -54,6 +54,10 @@ const FieldsView = () => {
     },
   });
 
+  // Tag input state for options
+  const [optionTags, setOptionTags] = useState<string[]>([]);
+  const optionInputRef = useRef<HTMLInputElement>(null);
+
   // Fetch fields from API
   const fetchFields = async () => {
     if (!subcategoryId) return;
@@ -77,12 +81,21 @@ const FieldsView = () => {
   // Clear options field if type is not radio/dropdown
   useEffect(() => {
     const subscription = form.watch((value, { name }) => {
-      if (name === 'type' && value.type !== 'radio' && value.type !== 'dropdown') {
+      if (name === 'type' && value.type !== 'radio' && value.type !== 'checkbox') {
+        setOptionTags([]);
         form.setValue('options', '');
       }
     });
     return () => subscription.unsubscribe();
   }, [form]);
+
+  // Keep form.options in sync with optionTags
+  useEffect(() => {
+    if (form.watch('type') === 'radio' || form.watch('type') === 'checkbox') {
+      form.setValue('options', optionTags.join(','));
+    }
+    // eslint-disable-next-line
+  }, [optionTags]);
 
 
   const handleAddField = () => {
@@ -95,18 +108,19 @@ const FieldsView = () => {
     setEditingFieldId(id);
     try {
       const data = await getFieldById(id);
-      let options = '';
+      let optionsArr: string[] = [];
       if (typeof data.options === 'string') {
-        try { options = JSON.parse(data.options).join(', '); } catch { options = ''; }
+        try { optionsArr = JSON.parse(data.options); } catch { optionsArr = []; }
       }
       form.reset({
         name: data.name || '',
         type: (data.type || '').toLowerCase() || 'text',
         required: !!data.required,
-        options,
+        options: optionsArr.join(','),
         description: data.description || '',
         displayOrder: data.displayOrder || 1,
       });
+      setOptionTags(optionsArr);
       setOpen(true);
     } catch (err) {
       // handle error (show toast, etc.)
@@ -120,13 +134,8 @@ const FieldsView = () => {
     if (typeEnum === 'IMAGE') typeEnum = 'FILE';
     if (typeEnum === 'CHECKBOX') typeEnum = 'MULTIPLE_CHOICE';
     let options: string | null = null;
-    if ((typeEnum === 'RADIO' || typeEnum === 'DROPDOWN' || typeEnum === 'MULTIPLE_CHOICE') && data.options) {
-      // Split by comma or any whitespace (one or more spaces/tabs/newlines)
-      const arr = data.options
-        .split(/[,\s]+/)
-        .map((opt: string) => opt.trim())
-        .filter(Boolean);
-      options = JSON.stringify(arr);
+    if ((typeEnum === 'RADIO' || typeEnum === 'DROPDOWN' || typeEnum === 'MULTIPLE_CHOICE')) {
+      options = JSON.stringify(optionTags.filter(Boolean));
     }
     let payload = {
       name: data.name,
@@ -147,6 +156,7 @@ const FieldsView = () => {
       }
       setOpen(false);
       form.reset();
+      setOptionTags([]);
       fetchFields();
       setEditingFieldId(null);
       setIsEdit(false);
@@ -248,19 +258,40 @@ const FieldsView = () => {
                       )} />
                       <FormField name="options" control={form.control} render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-xs font-medium">Options (comma separated)</FormLabel>
+                          <FormLabel className="text-xs font-medium">Options (press space, comma, or enter to add)</FormLabel>
                           <FormControl>
-                            <Input
-                              placeholder="Option1, Option2, Option3"
-                              {...field}
-                              value={field.value || ''}
-                              onChange={field.onChange}
-                              disabled={!(form.watch('type') === 'radio' || form.watch('type') === 'checkbox')}
-                              className="rounded border-gray-300 focus:ring-saas-blue focus:border-saas-blue focus:outline-none px-2 py-1 text-xs bg-gray-50 disabled:bg-gray-100"
-                              style={{ boxShadow: 'none' }}
-                            />
+                            <div className="flex flex-wrap gap-1 items-center rounded border border-gray-300 px-2 py-1 bg-gray-50 min-h-[38px]">
+                              {optionTags.map((tag, idx) => (
+                                <span key={idx} className="flex items-center bg-saas-blue/10 text-saas-blue rounded px-2 py-0.5 text-xs mr-1">
+                                  {tag}
+                                  <button type="button" className="ml-1 text-xs text-saas-blue hover:text-red-500" onClick={() => setOptionTags(optionTags.filter((_, i) => i !== idx))}>
+                                    ×
+                                  </button>
+                                </span>
+                              ))}
+                              {(form.watch('type') === 'radio' || form.watch('type') === 'checkbox') && (
+                                <input
+                                  ref={optionInputRef}
+                                  type="text"
+                                  className="flex-1 min-w-[60px] border-none outline-none bg-transparent text-xs"
+                                  placeholder={optionTags.length === 0 ? 'Type and press space/comma/enter' : ''}
+                                  onKeyDown={e => {
+                                    if ([" ", ",", "Enter"].includes(e.key) && optionInputRef.current) {
+                                      const val = optionInputRef.current.value.trim();
+                                      if (val && !optionTags.includes(val)) {
+                                        setOptionTags([...optionTags, val]);
+                                      }
+                                      optionInputRef.current.value = '';
+                                      e.preventDefault();
+                                    } else if (e.key === 'Backspace' && optionInputRef.current && optionInputRef.current.value === '' && optionTags.length > 0) {
+                                      setOptionTags(optionTags.slice(0, -1));
+                                    }
+                                  }}
+                                />
+                              )}
+                            </div>
                           </FormControl>
-                          <FormDescription>Only for radio/checkbox fields</FormDescription>
+                          <FormDescription>Only for radio/checkbox fields. Each option becomes a tag.</FormDescription>
                           <FormMessage />
                         </FormItem>
                       )} />
