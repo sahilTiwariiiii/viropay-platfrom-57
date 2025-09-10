@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import Header from '@/components/layout/Header';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
 import { Edit, Trash2, Plus } from 'lucide-react';
-import { getFieldsBySubcategory, addField, deleteField } from '@/api/fields';
+import { getFieldsBySubcategory, addField, deleteField, updateField } from '@/api/fields';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { Form, FormItem, FormLabel, FormControl, FormDescription, FormMessage, FormField } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
@@ -14,6 +14,7 @@ import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
 import { useForm } from 'react-hook-form';
+import { getFieldById } from '@/api/fieldSingle';
 
 
 
@@ -40,6 +41,7 @@ const FieldsView = () => {
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
+  const [editingFieldId, setEditingFieldId] = useState<string | null>(null);
 
   const form = useForm({
     defaultValues: {
@@ -88,44 +90,66 @@ const FieldsView = () => {
     setOpen(true);
   };
 
+  const handleEditField = async (id: string) => {
+    setIsEdit(true);
+    setEditingFieldId(id);
+    try {
+      const data = await getFieldById(id);
+      let options = '';
+      if (typeof data.options === 'string') {
+        try { options = JSON.parse(data.options).join(', '); } catch { options = ''; }
+      }
+      form.reset({
+        name: data.name || '',
+        type: (data.type || '').toLowerCase() || 'text',
+        required: !!data.required,
+        options,
+        description: data.description || '',
+        displayOrder: data.displayOrder || 1,
+      });
+      setOpen(true);
+    } catch (err) {
+      // handle error (show toast, etc.)
+    }
+  };
+
   const onSubmit = async (data: any) => {
     if (!subcategoryId) return;
-  // Capitalize type for enum compliance and map 'image' to 'FILE' for backend
-  let typeEnum = (data.type || '').toUpperCase();
-  if (typeEnum === 'IMAGE') typeEnum = 'FILE';
+    // Capitalize type for enum compliance and map 'image' to 'FILE' for backend
+    let typeEnum = (data.type || '').toUpperCase();
+    if (typeEnum === 'IMAGE') typeEnum = 'FILE';
     let options: string | null = null;
     if ((typeEnum === 'RADIO' || typeEnum === 'DROPDOWN' || typeEnum === 'MULTIPLE_CHOICE') && data.options) {
       const arr = data.options.split(',').map((opt: string) => opt.trim()).filter(Boolean);
       options = JSON.stringify(arr);
     }
-    // Default displayOrder to last+1
-    const displayOrder = fields.length + 1;
-    const payload = {
+    let payload = {
       name: data.name,
       type: typeEnum,
       required: data.required,
       options,
       description: data.description,
       subcategoryId: Number(subcategoryId),
-      displayOrder,
+      displayOrder: isEdit ? Number(data.displayOrder) : fields.length + 1,
       active: true,
       validationRules: '{}',
     };
     try {
-      await addField(payload);
+      if (isEdit && editingFieldId) {
+        await updateField(editingFieldId, payload);
+      } else {
+        await addField(payload);
+      }
       setOpen(false);
       form.reset();
       fetchFields();
+      setEditingFieldId(null);
+      setIsEdit(false);
     } catch (err) {
       // handle error (show toast, etc.)
     }
   };
 
-
-  const handleEditField = (id: string) => {
-    // Implement edit field logic or navigation
-    alert(`Edit field ${id} (to be implemented)`);
-  };
 
   const handleDeleteField = async (id: string) => {
     try {
@@ -135,6 +159,8 @@ const FieldsView = () => {
       // handle error (show toast, etc.)
     }
   };
+
+  // Add this closing bracket to properly close the component's logic before returning JSX
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden bg-gray-50">
@@ -166,7 +192,7 @@ const FieldsView = () => {
                   }}
                 >
                   <DialogHeader>
-                    <DialogTitle>Add New Field</DialogTitle>
+                    <DialogTitle>{isEdit ? 'Edit' : 'Add New'} Field</DialogTitle>
                   </DialogHeader>
                   <Form {...form}>
                     <form onSubmit={form.handleSubmit(onSubmit)} className="grid grid-cols-1 gap-2 w-full text-xs">
@@ -254,7 +280,7 @@ const FieldsView = () => {
                         </FormItem>
                       )} />
                       <DialogFooter className="flex flex-row justify-end gap-2 mt-2">
-                        <Button type="submit" className="bg-saas-blue hover:bg-saas-blue/90 px-4 py-1.5 rounded text-xs font-semibold shadow">Add Field</Button>
+                        <Button type="submit" className="bg-saas-blue hover:bg-saas-blue/90 px-4 py-1.5 rounded text-xs font-semibold shadow">{isEdit ? 'Update' : 'Add'} Field</Button>
                         <DialogClose asChild>
                           <Button type="button" variant="outline" className="px-4 py-1.5 rounded text-xs font-semibold shadow">Cancel</Button>
                         </DialogClose>
@@ -305,11 +331,17 @@ const FieldsView = () => {
                           )}
                         </TableCell>
                         <TableCell>
-                          {Array.isArray(field.options) && field.options.length > 0 ? (
-                            <span className="text-xs text-gray-700">{field.options.join(', ')}</span>
-                          ) : (
-                            <span className="text-xs text-gray-400">-</span>
-                          )}
+                          {(() => {
+                            let opts = field.options;
+                            if (typeof opts === 'string') {
+                              try { opts = JSON.parse(opts); } catch { opts = []; }
+                            }
+                            return Array.isArray(opts) && opts.length > 0 ? (
+                              <span className="text-xs text-gray-700">{opts.join(', ')}</span>
+                            ) : (
+                              <span className="text-xs text-gray-400">-</span>
+                            );
+                          })()}
                         </TableCell>
                         <TableCell>
                           <div className="flex gap-2">
