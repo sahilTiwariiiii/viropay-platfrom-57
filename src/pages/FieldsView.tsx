@@ -24,7 +24,7 @@ const FIELD_TYPES = [
   { value: 'date', label: 'Date' },
   { value: 'image', label: 'Image' },
   { value: 'radio', label: 'Radio' },
-  { value: 'dropdown', label: 'Dropdown' },
+  // { value: 'dropdown', label: 'Dropdown' }, // Removed as requested
   { value: 'checkbox', label: 'Checkbox' },
   { value: 'textarea', label: 'Textarea' },
 ];
@@ -39,6 +39,7 @@ const FieldsView = () => {
   const [fields, setFields] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
+  const [isEdit, setIsEdit] = useState(false);
 
   const form = useForm({
     defaultValues: {
@@ -47,6 +48,7 @@ const FieldsView = () => {
       required: false,
       options: '',
       description: '',
+      displayOrder: 1,
     },
   });
 
@@ -82,21 +84,31 @@ const FieldsView = () => {
 
 
   const handleAddField = () => {
+    setIsEdit(false);
     setOpen(true);
   };
 
   const onSubmit = async (data: any) => {
     if (!subcategoryId) return;
-    const optionsArr = (data.type === 'radio' || data.type === 'dropdown') && data.options
-      ? data.options.split(',').map((opt: string) => opt.trim()).filter(Boolean)
-      : undefined;
+    // Capitalize type for enum compliance
+    const typeEnum = (data.type || '').toUpperCase();
+    let options: string | null = null;
+    if ((typeEnum === 'RADIO' || typeEnum === 'DROPDOWN' || typeEnum === 'MULTIPLE_CHOICE') && data.options) {
+      const arr = data.options.split(',').map((opt: string) => opt.trim()).filter(Boolean);
+      options = JSON.stringify(arr);
+    }
+    // Default displayOrder to last+1
+    const displayOrder = fields.length + 1;
     const payload = {
       name: data.name,
-      type: data.type,
+      type: typeEnum,
       required: data.required,
-      options: optionsArr,
+      options,
       description: data.description,
-      subcategoryId,
+      subcategoryId: Number(subcategoryId),
+      displayOrder,
+      active: true,
+      validationRules: '{}',
     };
     try {
       await addField(payload);
@@ -140,27 +152,48 @@ const FieldsView = () => {
                 <Plus className="mr-2 h-4 w-4" /> Add Field
               </Button>
               <Dialog open={open} onOpenChange={setOpen}>
-                <DialogContent>
+                <DialogContent
+                  className="w-full max-w-md p-2 bg-white rounded-lg shadow-lg border border-gray-100 flex flex-col justify-center items-center"
+                  style={{
+                    top: '50%',
+                    left: '50%',
+                    transform: 'translate(-50%, -50%)',
+                    position: 'fixed',
+                    zIndex: 50,
+                    maxHeight: '95vh',
+                    minHeight: 'auto',
+                  }}
+                >
                   <DialogHeader>
                     <DialogTitle>Add New Field</DialogTitle>
                   </DialogHeader>
                   <Form {...form}>
-                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                    <form onSubmit={form.handleSubmit(onSubmit)} className="grid grid-cols-1 gap-2 w-full text-xs">
                       <FormField name="name" control={form.control} render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Field Name</FormLabel>
+                          <FormLabel className="text-xs font-medium">Field Name</FormLabel>
                           <FormControl>
-                            <Input placeholder="Enter field name" {...field} required />
+                            <Input
+                              placeholder="Enter field name"
+                              {...field}
+                              required
+                              className="rounded border-gray-300 focus:ring-saas-blue focus:border-saas-blue focus:outline-none px-2 py-1 text-xs"
+                              style={{ boxShadow: 'none' }}
+                              onChange={e => {
+                                const formatted = e.target.value.toLowerCase().replace(/\s+/g, '-');
+                                field.onChange(formatted);
+                              }}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )} />
                       <FormField name="type" control={form.control} render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Field Type</FormLabel>
+                          <FormLabel className="text-xs font-medium">Field Type</FormLabel>
                           <FormControl>
                             <Select value={field.value} onValueChange={field.onChange}>
-                              <SelectTrigger>
+                              <SelectTrigger className="rounded border-gray-300 focus:ring-saas-blue px-2 py-1 text-xs" >
                                 <SelectValue placeholder="Select type" />
                               </SelectTrigger>
                               <SelectContent>
@@ -174,16 +207,16 @@ const FieldsView = () => {
                         </FormItem>
                       )} />
                       <FormField name="required" control={form.control} render={({ field }) => (
-                        <FormItem className="flex flex-row items-center gap-2">
+                          <FormItem className="flex flex-row items-center gap-1">
                           <FormControl>
-                            <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+                            <Checkbox checked={field.value} onCheckedChange={field.onChange} className="scale-90" />
                           </FormControl>
-                          <FormLabel>Required</FormLabel>
+                          <FormLabel className="text-xs font-medium">Required</FormLabel>
                         </FormItem>
                       )} />
                       <FormField name="options" control={form.control} render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Options (comma separated)</FormLabel>
+                          <FormLabel className="text-xs font-medium">Options (comma separated)</FormLabel>
                           <FormControl>
                             <Input
                               placeholder="Option1, Option2, Option3"
@@ -191,25 +224,38 @@ const FieldsView = () => {
                               value={field.value || ''}
                               onChange={field.onChange}
                               disabled={!(form.watch('type') === 'radio' || form.watch('type') === 'dropdown')}
+                              className="rounded border-gray-300 focus:ring-saas-blue focus:border-saas-blue focus:outline-none px-2 py-1 text-xs bg-gray-50 disabled:bg-gray-100"
+                              style={{ boxShadow: 'none' }}
                             />
                           </FormControl>
                           <FormDescription>Only for radio/dropdown fields</FormDescription>
                           <FormMessage />
                         </FormItem>
                       )} />
+                      {fields.length > 0 && isEdit && (
+                        <FormField name="displayOrder" control={form.control} render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-xs font-medium">Display Order</FormLabel>
+                            <FormControl>
+                              <Input type="number" min={1} placeholder="Display order (e.g. 1)" {...field} className="rounded border-gray-300 focus:ring-saas-blue focus:border-saas-blue focus:outline-none px-2 py-1 text-xs bg-gray-50" style={{ boxShadow: 'none' }} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )} />
+                      )}
                       <FormField name="description" control={form.control} render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Description</FormLabel>
+                          <FormLabel className="text-xs font-medium">Description</FormLabel>
                           <FormControl>
-                            <Textarea placeholder="Field description (optional)" {...field} />
+                            <Textarea placeholder="Field description (optional)" {...field} className="rounded border-gray-300 focus:ring-saas-blue px-2 py-1 text-xs bg-gray-50" rows={2} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )} />
-                      <DialogFooter>
-                        <Button type="submit" className="bg-saas-blue hover:bg-saas-blue/90">Add Field</Button>
+                      <DialogFooter className="flex flex-row justify-end gap-2 mt-2">
+                        <Button type="submit" className="bg-saas-blue hover:bg-saas-blue/90 px-4 py-1.5 rounded text-xs font-semibold shadow">Add Field</Button>
                         <DialogClose asChild>
-                          <Button type="button" variant="outline">Cancel</Button>
+                          <Button type="button" variant="outline" className="px-4 py-1.5 rounded text-xs font-semibold shadow">Cancel</Button>
                         </DialogClose>
                       </DialogFooter>
                     </form>
