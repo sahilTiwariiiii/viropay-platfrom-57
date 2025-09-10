@@ -135,8 +135,8 @@ const ViewSubCategories = () => {
                                 variant="outline"
                                 size="sm"
                                 onClick={() => {
-                                  // Navigate to fields view with category and subcategory
-                                  navigate(`/fields/view?category=${encodeURIComponent(categoryName || '')}&subcategory=${encodeURIComponent(subCategory.name)}`);
+                                  // Navigate to fields view with category, subcategory, and subcategoryId
+                                  navigate(`/fields/view?category=${encodeURIComponent(categoryName || '')}&subcategory=${encodeURIComponent(subCategory.name)}&subcategoryId=${subCategory.id}`);
                                 }}
                               >
                                 See Fields

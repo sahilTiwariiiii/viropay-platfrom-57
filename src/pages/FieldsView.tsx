@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import Header from '@/components/layout/Header';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
 import { Edit, Trash2, Plus } from 'lucide-react';
+import { getFieldsBySubcategory, addField, deleteField } from '@/api/fields';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { Form, FormItem, FormLabel, FormControl, FormDescription, FormMessage, FormField } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
@@ -14,20 +15,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
 import { useForm } from 'react-hook-form';
 
-// Dummy data for fields by subcategory
-const initialMockFields = {
-  'Software|CRM Software': [
-    { id: '1', name: 'Company Name', type: 'text', required: true },
-    { id: '2', name: 'Contact Email', type: 'email', required: true },
-  ],
-  'Software|Project Management': [
-    { id: '3', name: 'Project Name', type: 'text', required: true },
-    { id: '4', name: 'Deadline', type: 'date', required: false },
-  ],
-  'Hardware|Computer Hardware': [
-    { id: '5', name: 'Serial Number', type: 'text', required: true },
-  ],
-};
+
 
 const FIELD_TYPES = [
   { value: 'text', label: 'Text' },
@@ -41,15 +29,16 @@ const FIELD_TYPES = [
   { value: 'textarea', label: 'Textarea' },
 ];
 
+
 const FieldsView = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const category = searchParams.get('category') || '';
   const subcategory = searchParams.get('subcategory') || '';
-  const key = `${category}|${subcategory}`;
-  const [mockFields, setMockFields] = useState(initialMockFields);
+  const subcategoryId = searchParams.get('subcategoryId') || '';
+  const [fields, setFields] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
-  const fields = mockFields[key] || [];
 
   const form = useForm({
     defaultValues: {
@@ -61,48 +50,77 @@ const FieldsView = () => {
     },
   });
 
-  // Clear options field if type is not radio/dropdown
-  React.useEffect(() => {
-    const type = form.watch('type');
-    if (type !== 'radio' && type !== 'dropdown') {
-      form.setValue('options', '');
+  // Fetch fields from API
+  const fetchFields = async () => {
+    if (!subcategoryId) return;
+    setLoading(true);
+    try {
+      const data = await getFieldsBySubcategory(subcategoryId);
+      // If API returns an array directly, use it. If wrapped in {fields: [...]}, use that.
+      setFields(Array.isArray(data) ? data : data.fields || []);
+    } catch (err) {
+      setFields([]);
+    } finally {
+      setLoading(false);
     }
-  }, [form.watch('type')]);
+  };
+
+  useEffect(() => {
+    fetchFields();
+    // eslint-disable-next-line
+  }, [subcategoryId]);
+
+  // Clear options field if type is not radio/dropdown
+  useEffect(() => {
+    const subscription = form.watch((value, { name }) => {
+      if (name === 'type' && value.type !== 'radio' && value.type !== 'dropdown') {
+        form.setValue('options', '');
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, [form]);
+
 
   const handleAddField = () => {
     setOpen(true);
   };
 
-  const onSubmit = (data) => {
+  const onSubmit = async (data: any) => {
+    if (!subcategoryId) return;
     const optionsArr = (data.type === 'radio' || data.type === 'dropdown') && data.options
-      ? data.options.split(',').map(opt => opt.trim()).filter(Boolean)
+      ? data.options.split(',').map((opt: string) => opt.trim()).filter(Boolean)
       : undefined;
-    const newField = {
-      id: Date.now().toString(),
+    const payload = {
       name: data.name,
       type: data.type,
       required: data.required,
       options: optionsArr,
       description: data.description,
+      subcategoryId,
     };
-    setMockFields((prev) => {
-      const updated = { ...prev };
-      if (!updated[key]) updated[key] = [];
-      updated[key] = [...updated[key], newField];
-      return updated;
-    });
-    setOpen(false);
-    form.reset();
+    try {
+      await addField(payload);
+      setOpen(false);
+      form.reset();
+      fetchFields();
+    } catch (err) {
+      // handle error (show toast, etc.)
+    }
   };
 
-  const handleEditField = (id) => {
+
+  const handleEditField = (id: string) => {
     // Implement edit field logic or navigation
     alert(`Edit field ${id} (to be implemented)`);
   };
 
-  const handleDeleteField = (id) => {
-    // Implement delete field logic
-    alert(`Delete field ${id} (to be implemented)`);
+  const handleDeleteField = async (id: string) => {
+    try {
+      await deleteField(id);
+      fetchFields();
+    } catch (err) {
+      // handle error (show toast, etc.)
+    }
   };
 
   return (
@@ -117,7 +135,7 @@ const FieldsView = () => {
         <Card className="max-w-3xl mx-auto mb-8">
           <CardContent className="p-6">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-semibold">Fields</h2>
+              <h2 className="text-xl font-semibold">Fields for <span className="text-saas-blue">{subcategory}</span></h2>
               <Button onClick={handleAddField} className="bg-saas-blue hover:bg-saas-blue/90">
                 <Plus className="mr-2 h-4 w-4" /> Add Field
               </Button>
@@ -211,8 +229,18 @@ const FieldsView = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {fields.length > 0 ? (
-                    fields.map((field) => (
+                  {loading ? (
+                    [...Array(5)].map((_, i) => (
+                      <TableRow key={i} className="animate-pulse">
+                        <TableCell><div className="h-6 bg-gray-200 rounded w-3/4" /></TableCell>
+                        <TableCell><div className="h-6 bg-gray-200 rounded w-1/2" /></TableCell>
+                        <TableCell><div className="h-6 bg-gray-200 rounded w-1/2" /></TableCell>
+                        <TableCell><div className="h-6 bg-gray-200 rounded w-2/3" /></TableCell>
+                        <TableCell><div className="h-6 bg-gray-200 rounded w-1/2" /></TableCell>
+                      </TableRow>
+                    ))
+                  ) : fields.length > 0 ? (
+                    fields.map((field: any) => (
                       <TableRow key={field.id} className="hover:bg-gray-50">
                         <TableCell>
                           <span className="font-medium">{field.name}</span>
@@ -250,7 +278,7 @@ const FieldsView = () => {
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={4} className="text-center py-10">No fields found for this subcategory.</TableCell>
+                      <TableCell colSpan={5} className="text-center py-10">No fields found for this subcategory.</TableCell>
                     </TableRow>
                   )}
                 </TableBody>
