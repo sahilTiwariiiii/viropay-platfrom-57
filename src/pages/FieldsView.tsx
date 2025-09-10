@@ -115,9 +115,10 @@ const FieldsView = () => {
 
   const onSubmit = async (data: any) => {
     if (!subcategoryId) return;
-    // Capitalize type for enum compliance and map 'image' to 'FILE' for backend
+    // Capitalize type for enum compliance and map 'image' to 'FILE', 'checkbox' to 'MULTIPLE_CHOICE' for backend
     let typeEnum = (data.type || '').toUpperCase();
     if (typeEnum === 'IMAGE') typeEnum = 'FILE';
+    if (typeEnum === 'CHECKBOX') typeEnum = 'MULTIPLE_CHOICE';
     let options: string | null = null;
     if ((typeEnum === 'RADIO' || typeEnum === 'DROPDOWN' || typeEnum === 'MULTIPLE_CHOICE') && data.options) {
       const arr = data.options.split(',').map((opt: string) => opt.trim()).filter(Boolean);
