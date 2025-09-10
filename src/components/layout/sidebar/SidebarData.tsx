@@ -40,17 +40,17 @@ export const getSidebarMenuItems = (): SidebarMenuItem[] => {
       ],
       category: "modules" 
     },
-    { 
-      icon: <Calendar className="w-5 h-5" />, 
-      label: "Sub Category", 
-      href: "/subcategories", 
-      hasSubmenu: true,
-      submenuItems: [
-        { label: "View All", href: "/subcategories" },
-        { label: "Add New", href: "/subcategories/add" }
-      ],
-      category: "modules" 
-    },
+    // { 
+    //   icon: <Calendar className="w-5 h-5" />, 
+    //   label: "Sub Category", 
+    //   href: "/subcategories", 
+    //   hasSubmenu: true,
+    //   submenuItems: [
+    //     { label: "View All", href: "/subcategories" },
+    //     { label: "Add New", href: "/subcategories/add" }
+    //   ],
+    //   category: "modules" 
+    // },
     { 
       icon: <FileText className="w-5 h-5" />, 
       label: "Fields", 

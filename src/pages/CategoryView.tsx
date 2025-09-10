@@ -44,9 +44,9 @@ const CategoryView = () => {
 		navigate('/category/add');
 	};
 
-	const handleViewCategories = (categoryId: number) => {
-		navigate(`/subcategories?categoryId=${categoryId}`);
-	};
+		const handleViewCategories = (categoryId: number, categoryName: string) => {
+			navigate(`/subcategories?categoryId=${categoryId}&categoryName=${encodeURIComponent(categoryName)}`);
+		};
 
 	const handleEdit = (category: Category) => {
 		setEditId(category.id);
@@ -106,38 +106,46 @@ const CategoryView = () => {
 									<Plus className="mr-2 h-4 w-4" /> Add Category
 								</Button>
 							</div>
-							<div className="overflow-x-auto">
-								{loading ? (
-									<div className="text-center py-10">Loading...</div>
-								) : error ? (
-									<div className="text-center py-10 text-red-500">{error}</div>
-								) : (
-									<Table>
-										<TableHeader>
-											<TableRow className="bg-gray-50 hover:bg-gray-50">
-												<TableHead>Category</TableHead>
-												<TableHead>Description</TableHead>
-												<TableHead className="w-[80px]">Actions</TableHead>
-											</TableRow>
-										</TableHeader>
-																		<TableBody>
-																			{categories.length > 0 ? (
-																				categories.map((category) => (
-																					<TableRow key={category.id} className="hover:bg-gray-50">
-																						<TableCell>
-																							{editId === category.id ? (
-																								<input
-																									className="border px-2 py-1 rounded w-full"
-																									value={editName}
-																									onChange={e => setEditName(e.target.value)}
-																									disabled={editLoading}
-																								/>
-																							) : (
-																								<span className="font-medium">{category.name}</span>
-																							)}
-																						</TableCell>
-																						<TableCell>
-																							{editId === category.id ? (
+							   <div className="overflow-x-auto">
+								   {loading ? (
+									   <div className="space-y-2">
+										 {[...Array(5)].map((_, i) => (
+										   <div key={i} className="animate-pulse flex space-x-4 py-2">
+											 <div className="h-6 bg-gray-200 rounded w-1/4" />
+											 <div className="h-6 bg-gray-200 rounded w-1/2" />
+											 <div className="h-6 bg-gray-200 rounded w-20" />
+										   </div>
+										 ))}
+									   </div>
+								   ) : error ? (
+									   <div className="text-center py-10 text-red-500">{error}</div>
+								   ) : (
+									   <Table>
+										   <TableHeader>
+											   <TableRow className="bg-gray-50 hover:bg-gray-50">
+												   <TableHead>Category</TableHead>
+												   <TableHead>Description</TableHead>
+												   <TableHead className="w-[80px]">Actions</TableHead>
+											   </TableRow>
+										   </TableHeader>
+																	   <TableBody>
+																		   {categories.length > 0 ? (
+																			   categories.map((category) => (
+																				   <TableRow key={category.id} className="hover:bg-gray-50">
+																					   <TableCell>
+																						   {editId === category.id ? (
+																							   <input
+																								   className="border px-2 py-1 rounded w-full"
+																								   value={editName}
+																								   onChange={e => setEditName(e.target.value)}
+																								   disabled={editLoading}
+																							   />
+																						   ) : (
+																							   <span className="font-medium">{category.name}</span>
+																						   )}
+																					   </TableCell>
+																					   <TableCell>
+																						   {editId === category.id ? (
 																								<input
 																									className="border px-2 py-1 rounded w-full"
 																									value={editDescription}
@@ -150,14 +158,14 @@ const CategoryView = () => {
 																						</TableCell>
 																						<TableCell>
 																							<div className="flex gap-2">
-																								<Button
-																									variant="outline"
-																									size="sm"
-																									onClick={() => handleViewCategories(category.id)}
-																									disabled={editId === category.id}
-																								>
-																									<ExternalLink className="h-4 w-4 mr-1" /> Open
-																								</Button>
+																															<Button
+																																variant="outline"
+																																size="sm"
+																																onClick={() => handleViewCategories(category.id, category.name)}
+																																disabled={editId === category.id}
+																															>
+																																<ExternalLink className="h-4 w-4 mr-1" /> Open
+																															</Button>
 																								{editId === category.id ? (
 																									<>
 																										<Button
