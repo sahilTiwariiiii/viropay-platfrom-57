@@ -53,7 +53,7 @@ const LeadsBySubCategory = () => {
   const handleViewDetails = (leadId: number) => {
     setDetailsDialogOpen(true);
     setLeadDetails(null);
-    getLeadDetails(leadId)
+    getLeadDetails(String(leadId))
       .then(data => setLeadDetails(data))
       .catch(() => setLeadDetails({ error: 'Failed to load details' }));
   };
@@ -200,10 +200,7 @@ const LeadsBySubCategory = () => {
                           <div className="font-semibold text-xs text-muted-foreground mb-1">Status</div>
                           <div className="text-base font-semibold text-blue-700">{leadDetails.status}</div>
                         </div>
-                        <div>
-                          <div className="font-semibold text-xs text-muted-foreground mb-1">Source</div>
-                          <div className="text-sm text-foreground break-all">{leadDetails.source}</div>
-                        </div>
+                        {/* Source field removed as per user request */}
                         <div>
                           <div className="font-semibold text-xs text-muted-foreground mb-1">IP Address</div>
                           <div className="text-sm text-foreground">{leadDetails.ipAddress}</div>
@@ -214,11 +211,33 @@ const LeadsBySubCategory = () => {
                         </div>
                         <div>
                           <div className="font-semibold text-xs text-muted-foreground mb-1">Created At</div>
-                          <div className="text-sm text-foreground">{leadDetails.createdAt ? new Date(leadDetails.createdAt).toLocaleString() : '-'}</div>
+                          <div className="text-sm text-foreground">
+                            {leadDetails.createdAt ?
+                              new Date(leadDetails.createdAt).toLocaleString('en-US', {
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                                second: '2-digit',
+                                hour12: true
+                              }) : '-'}
+                          </div>
                         </div>
                         <div>
                           <div className="font-semibold text-xs text-muted-foreground mb-1">Updated At</div>
-                          <div className="text-sm text-foreground">{leadDetails.updateAt ? new Date(leadDetails.updateAt).toLocaleString() : '-'}</div>
+                          <div className="text-sm text-foreground">
+                            {leadDetails.updateAt ?
+                              new Date(leadDetails.updateAt).toLocaleString('en-US', {
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                                second: '2-digit',
+                                hour12: true
+                              }) : '-'}
+                          </div>
                         </div>
                         <div className="sm:col-span-2">
                           <div className="font-semibold text-xs text-muted-foreground mb-1">Notes</div>
