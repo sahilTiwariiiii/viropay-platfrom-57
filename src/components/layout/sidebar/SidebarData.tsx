@@ -51,12 +51,12 @@ export const getSidebarMenuItems = (): SidebarMenuItem[] => {
     //   ],
     //   category: "modules" 
     // },
-    { 
-      icon: <FileText className="w-5 h-5" />, 
-      label: "Fields", 
-      href: "/fields", 
-      category: "modules" 
-    },
+    // { 
+    //   icon: <FileText className="w-5 h-5" />, 
+    //   label: "Fields", 
+    //   href: "/fields", 
+    //   category: "modules" 
+    // },
     { 
       icon: <Plug className="w-5 h-5" />, 
       label: "Manage Clients", 
