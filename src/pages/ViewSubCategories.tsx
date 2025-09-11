@@ -121,6 +121,26 @@ const ViewSubCategories = () => {
                                 variant="outline"
                                 size="sm"
                                 onClick={() => {
+                                  // Navigate to fields view with category, subcategory, and subcategoryId
+                                  navigate(`/fields/view?category=${encodeURIComponent(categoryName || '')}&subcategory=${encodeURIComponent(subCategory.name)}&subcategoryId=${subCategory.id}`);
+                                }}
+                              >
+                                See Fields
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  // Navigate to leads page for this subcategory
+                                  navigate(`/leads?subcategoryId=${subCategory.id}&subcategoryName=${encodeURIComponent(subCategory.name)}`);
+                                }}
+                              >
+                                Leads
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
                                   setEditSubCategory(subCategory);
                                   setEditName(subCategory.name);
                                   setEditDescription(subCategory.description || '');
@@ -130,16 +150,6 @@ const ViewSubCategories = () => {
                                 }}
                               >
                                 <Pencil className="h-4 w-4 mr-1" /> Edit
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => {
-                                  // Navigate to fields view with category, subcategory, and subcategoryId
-                                  navigate(`/fields/view?category=${encodeURIComponent(categoryName || '')}&subcategory=${encodeURIComponent(subCategory.name)}&subcategoryId=${subCategory.id}`);
-                                }}
-                              >
-                                See Fields
                               </Button>
       {/* Edit Subcategory Dialog */}
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
