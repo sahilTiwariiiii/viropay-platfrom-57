@@ -184,81 +184,116 @@ const FieldsView = () => {
       
   <main className="flex-1 overflow-y-auto p-2 sm:p-4 md:p-6 animate-fade-in">
         {/* Hero Section */}
-  <div className="max-w-7xl mx-auto mb-8 px-1 sm:px-2 md:px-4">
-          <div className="card-gradient rounded-2xl p-4 sm:p-6 md:p-8 hover-lift">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <div className="flex items-center space-x-3 sm:space-x-4">
-                <div className="bg-primary/10 p-2 sm:p-3 rounded-xl">
-                  <Settings className="h-7 w-7 sm:h-8 sm:w-8 text-primary" />
+        <div className="max-w-7xl mx-auto mb-8 px-1 sm:px-2 md:px-4">
+          {loading ? (
+            <div className="card-gradient rounded-2xl p-4 sm:p-6 md:p-8 hover-lift">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div className="flex items-center space-x-3 sm:space-x-4">
+                  <div className="bg-primary/10 p-2 sm:p-3 rounded-xl shimmer" style={{minWidth: '40px', minHeight: '40px'}} />
+                  <div>
+                    <div className="h-6 sm:h-8 w-32 sm:w-48 rounded shimmer mb-2" />
+                    <div className="h-4 w-40 sm:w-64 rounded shimmer" />
+                  </div>
                 </div>
-                <div>
-                  <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent">
-                    Fields Configuration
-                  </h1>
-                  <p className="text-muted-foreground mt-1 text-xs sm:text-sm">
-                    Manage form fields for <span className="font-semibold text-primary">{subcategory}</span>
-                  </p>
+                <div className="w-full sm:w-auto flex items-center">
+                  <div className="h-10 w-full sm:w-40 rounded shimmer" />
                 </div>
               </div>
-              <Button 
-                onClick={handleAddField} 
-                className="btn-primary-glow text-primary-foreground border-0 px-4 py-2 sm:px-6 sm:py-3 text-sm sm:text-base w-full sm:w-auto"
-                size="lg"
-              >
-                <Plus className="mr-2 h-5 w-5" /> 
-                Add New Field
-              </Button>
             </div>
-          </div>
+          ) : (
+            <div className="card-gradient rounded-2xl p-4 sm:p-6 md:p-8 hover-lift">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div className="flex items-center space-x-3 sm:space-x-4">
+                  <div className="bg-primary/10 p-2 sm:p-3 rounded-xl">
+                    <Settings className="h-7 w-7 sm:h-8 sm:w-8 text-primary" />
+                  </div>
+                  <div>
+                    <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent">
+                      Fields Configuration
+                    </h1>
+                    <p className="text-muted-foreground mt-1 text-xs sm:text-sm">
+                      Manage form fields for <span className="font-semibold text-primary">{subcategory}</span>
+                    </p>
+                  </div>
+                </div>
+                <Button 
+                  onClick={handleAddField} 
+                  className="btn-primary-glow text-primary-foreground border-0 px-4 py-2 sm:px-6 sm:py-3 text-sm sm:text-base w-full sm:w-auto"
+                  size="lg"
+                >
+                  <Plus className="mr-2 h-5 w-5" /> 
+                  Add New Field
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Stats Cards */}
-  <div className="max-w-7xl mx-auto mb-8 grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 md:gap-6 px-1 sm:px-2 md:px-4">
-          <Card className="card-gradient hover-lift">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Total Fields</p>
-                  <p className="text-2xl font-bold text-primary">{fields.length}</p>
-                </div>
-                <div className="bg-primary/10 p-3 rounded-xl">
-                  <Tag className="h-6 w-6 text-primary" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card className="card-gradient hover-lift">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Required Fields</p>
-                  <p className="text-2xl font-bold text-primary">
-                    {fields.filter(f => f.required).length}
-                  </p>
-                </div>
-                <div className="bg-success/10 p-3 rounded-xl">
-                  <CheckCircle className="h-6 w-6 text-success" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card className="card-gradient hover-lift">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Field Types</p>
-                  <p className="text-2xl font-bold text-primary">
-                    {new Set(fields.map(f => f.type)).size}
-                  </p>
-                </div>
-                <div className="bg-warning/10 p-3 rounded-xl">
-                  <Clock className="h-6 w-6 text-warning" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+        <div className="max-w-7xl mx-auto mb-8 grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 md:gap-6 px-1 sm:px-2 md:px-4">
+          {loading ? (
+            <>
+              {[...Array(3)].map((_, i) => (
+                <Card className="card-gradient hover-lift" key={i}>
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="h-4 w-24 rounded shimmer mb-2" />
+                        <div className="h-7 w-12 rounded shimmer" />
+                      </div>
+                      <div className="h-8 w-8 rounded-xl shimmer" />
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </>
+          ) : (
+            <>
+              <Card className="card-gradient hover-lift">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">Total Fields</p>
+                      <p className="text-2xl font-bold text-primary">{fields.length}</p>
+                    </div>
+                    <div className="bg-primary/10 p-3 rounded-xl">
+                      <Tag className="h-6 w-6 text-primary" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card className="card-gradient hover-lift">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">Required Fields</p>
+                      <p className="text-2xl font-bold text-primary">
+                        {fields.filter(f => f.required).length}
+                      </p>
+                    </div>
+                    <div className="bg-success/10 p-3 rounded-xl">
+                      <CheckCircle className="h-6 w-6 text-success" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card className="card-gradient hover-lift">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">Field Types</p>
+                      <p className="text-2xl font-bold text-primary">
+                        {new Set(fields.map(f => f.type)).size}
+                      </p>
+                    </div>
+                    <div className="bg-warning/10 p-3 rounded-xl">
+                      <Clock className="h-6 w-6 text-warning" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </>
+          )}
         </div>
 
         {/* Main Table */}
