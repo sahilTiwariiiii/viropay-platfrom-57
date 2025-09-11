@@ -155,7 +155,7 @@ const LeadsBySubCategory = () => {
                     aria-label="Close"
                     type="button"
                   >
-                    <span aria-hidden="true">&times;</span>
+                    {/* <span aria-hidden="true">&times;</span> */}
                   </button>
                 </DialogClose>
               </div>
