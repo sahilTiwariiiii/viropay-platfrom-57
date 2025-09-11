@@ -149,14 +149,15 @@ const LeadsBySubCategory = () => {
               <div className="relative px-6 pt-6 pb-2">
                 <DialogTitle>Lead Details</DialogTitle>
                 {/* Only one close button, absolutely positioned */}
-                <button
-                  className="absolute right-4 top-4 text-gray-400 hover:text-gray-600 z-10"
-                  aria-label="Close"
-                  onClick={() => setDetailsDialogOpen(false)}
-                  type="button"
-                >
-                  <span aria-hidden="true">&times;</span>
-                </button>
+                <DialogClose asChild>
+                  <button
+                    className="absolute right-4 top-4 text-gray-400 hover:text-gray-600 z-10"
+                    aria-label="Close"
+                    type="button"
+                  >
+                    <span aria-hidden="true">&times;</span>
+                  </button>
+                </DialogClose>
               </div>
               <div
                 className="flex-1 px-6 pb-6 pt-2 scrollbar-hide"
