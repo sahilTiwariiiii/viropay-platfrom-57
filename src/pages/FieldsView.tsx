@@ -267,7 +267,7 @@ const FieldsView = () => {
                                   <button type="button" className="ml-1 text-xs text-saas-blue hover:text-red-500" onClick={() => setOptionTags(optionTags.filter((_, i) => i !== idx))}>
                                     ×
                                   </button>
-                                </span>
+                                </span> 
                               ))}
                               {(form.watch('type') === 'radio' || form.watch('type') === 'checkbox') && (
                                 <input
