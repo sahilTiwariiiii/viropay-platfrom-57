@@ -132,7 +132,7 @@ const ViewSubCategories = () => {
                                 size="sm"
                                 onClick={() => {
                                   // Navigate to leads page for this subcategory
-                                  navigate(`/leads?subcategoryId=${subCategory.id}&subcategoryName=${encodeURIComponent(subCategory.name)}`);
+                                  navigate(`/leadsbysubcategory?subcategoryId=${subCategory.id}&subcategoryName=${encodeURIComponent(subCategory.name)}`);
                                 }}
                               >
                                 Leads

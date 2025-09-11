@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -23,6 +22,7 @@ import ViewSubCategories from "./pages/ViewSubCategories";
 import AddSubCategory from "./pages/AddSubCategory";
 import CategoryView from "./pages/CategoryView";
 import AddCategory from "./pages/AddCategory";
+import LeadsBySubCategory from "./pages/LeadsBySubCategory";
 // import AllSubCategory from "./components/AllSubCategory";
 
 // Create a layout component that includes the sidebar
@@ -73,6 +73,7 @@ const App = () => (
               <Route path="procurement" element={<Procurement />} />
               <Route path="fields" element={<Fields />} />
               <Route path="fields/view" element={<FieldsView />} />
+              <Route path="leadsbysubcategory" element={<LeadsBySubCategory />} />
               <Route path="*" element={<NotFound />} />
             </Route>
           </Route>
