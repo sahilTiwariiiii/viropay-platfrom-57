@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import api from '@/api';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import Header from '@/components/layout/Header';
@@ -116,10 +116,56 @@ const LeadsBySubCategory = () => {
                     page: '0',
                     size: '100',
                   });
-                  const response = await axios.get(`/api/v1/leads/export?${params.toString()}`, {
+                  const response = await api.get(`/api/v1/leads/export?${params.toString()}`, {
                     responseType: 'blob',
                   });
-                  const url = window.URL.createObjectURL(new Blob([response.data]));
+                  // Read CSV as text
+                  const text = await response.data.text();
+                  // Parse CSV rows
+                  const rows = text.split(/\r?\n/).filter(Boolean);
+                  if (rows.length === 0) throw new Error('No data to export');
+                  // Parse header
+                  const headers = rows[0].split(',');
+                  // Find dataJson column index
+                  const dataJsonIdx = headers.findIndex(h => h.trim() === 'dataJson');
+                  let extraFields = new Set<string>();
+                  // First pass: collect all keys from dataJson
+                  const parsedRows = rows.slice(1).map(row => {
+                    const cols = row.split(',');
+                    let dataObj = {};
+                    if (dataJsonIdx !== -1 && cols[dataJsonIdx]) {
+                      try {
+                        dataObj = JSON.parse(cols[dataJsonIdx].replace(/'/g, '"'));
+                        Object.keys(dataObj).forEach(k => extraFields.add(k));
+                      } catch {}
+                    }
+                    return { cols, dataObj };
+                  });
+                  // New headers: replace dataJson with its keys
+                  const newHeaders = [...headers];
+                  if (dataJsonIdx !== -1) {
+                    newHeaders.splice(dataJsonIdx, 1, ...Array.from(extraFields));
+                  }
+                  // Build new CSV
+                  const newRows = [newHeaders.join(',')];
+                  parsedRows.forEach(({ cols, dataObj }) => {
+                    const baseCols = [...cols];
+                    if (dataJsonIdx !== -1) {
+                      baseCols.splice(
+                        dataJsonIdx,
+                        1,
+                        ...Array.from(extraFields).map((f: string) =>
+                          dataObj && typeof dataObj === 'object' && dataObj !== null && (f in dataObj)
+                            ? JSON.stringify((dataObj as Record<string, unknown>)[f])
+                            : ''
+                        )
+                      );
+                    }
+                    newRows.push(baseCols.join(','));
+                  });
+                  const newCsv = newRows.join('\r\n');
+                  const blob = new Blob([newCsv], { type: 'text/csv' });
+                  const url = window.URL.createObjectURL(blob);
                   const link = document.createElement('a');
                   link.href = url;
                   link.setAttribute('download', `leads_export_${subcategoryName || 'all'}.csv`);
