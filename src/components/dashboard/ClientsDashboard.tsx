@@ -19,7 +19,8 @@ import {
   UserCheck,
   UserX,
   Loader2,
-  ExternalLink
+  ExternalLink,
+  KeyRound
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -40,12 +41,25 @@ import {
 } from '@/lib/api';
 import { ClientForm } from './ClientForm';
 import { ClientDetails} from './ClientDetails'
+import { ManageCredentialsModal } from './ManageCredentialsModal';
 
 
 type DialogMode = 'create' | 'edit' | 'view' | null;
 
+
+interface CredentialsData {
+  username: string;
+  email: string;
+  password: string;
+  role: string;
+}
+
+
 export const ClientsDashboard: React.FC = () => {
   const [clients, setClients] = useState<Client[]>([]);
+  const [credentialsModalOpen, setCredentialsModalOpen] = useState(false);
+  const [credentialsClientId, setCredentialsClientId] = useState<number | null>(null);
+  const [credentialsInitial, setCredentialsInitial] = useState<CredentialsData | undefined>(undefined);
   const navigate = useNavigate();
   const [totalClients, setTotalClients] = useState(0);
   const [currentPage, setCurrentPage] = useState(0);
@@ -65,13 +79,11 @@ export const ClientsDashboard: React.FC = () => {
     try {
       setLoading(true);
       let response;
-      
       if (USE_MOCK_DATA) {
         response = await getMockClients(currentPage, searchTerm);
       } else {
         response = await getClients(currentPage, searchTerm);
       }
-      
       setClients(response.content);
       setTotalClients(response.totalElements);
     } catch (error) {
@@ -89,14 +101,15 @@ export const ClientsDashboard: React.FC = () => {
   useEffect(() => {
     const delayedSearch = setTimeout(() => {
       setCurrentPage(0);
-      fetchClients();
+      // Wrap fetchClients in async IIFE
+      (async () => { await fetchClients(); })();
     }, 300);
-
     return () => clearTimeout(delayedSearch);
   }, [searchTerm]);
 
   useEffect(() => {
-    fetchClients();
+    // Wrap fetchClients in async IIFE
+    (async () => { await fetchClients(); })();
   }, [currentPage]);
 
   const handleCreateClient = async (data: CreateClientData) => {
@@ -227,10 +240,6 @@ export const ClientsDashboard: React.FC = () => {
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground">Client Management</h1>
-            <p className="text-muted-foreground">Manage your client database</p>
-          </div>
           <Button 
             onClick={() => setDialogMode('create')}
             className="admin-button-primary w-fit"
@@ -365,6 +374,31 @@ export const ClientsDashboard: React.FC = () => {
                             <Button
                               variant="ghost"
                               size="sm"
+                              title="Manage Credentials"
+                              onClick={() => {
+                                setCredentialsClientId(client.id);
+                                setCredentialsInitial({
+                                  username: client.name || '',
+                                  email: client.email || '',
+                                  password: '',
+                                  role: 'CLIENT',
+                                });
+                                setCredentialsModalOpen(true);
+                              }}
+                              className="hover:bg-primary hover:text-primary-foreground"
+                            >
+                              <KeyRound className="h-4 w-4" />
+                            </Button>
+      <ManageCredentialsModal
+        open={credentialsModalOpen}
+        onOpenChange={setCredentialsModalOpen}
+        clientId={credentialsClientId ?? 0}
+        initialData={credentialsInitial}
+        onSuccess={fetchClients}
+      />
+                            <Button
+                              variant="ghost"
+                              size="sm"
                               onClick={() => {
                                 setSelectedClient(client);
                                 setDialogMode('edit');
@@ -486,4 +520,4 @@ export const ClientsDashboard: React.FC = () => {
       </div>
     </div>
   );
-};
+}
