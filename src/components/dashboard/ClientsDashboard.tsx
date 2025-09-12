@@ -18,7 +18,8 @@ import {
   Users,
   UserCheck,
   UserX,
-  Loader2
+  Loader2,
+  ExternalLink
 } from 'lucide-react';
 
 import { 
@@ -330,7 +331,18 @@ export const ClientsDashboard: React.FC = () => {
                         className="admin-table-row fade-in"
                         style={{ animationDelay: `${index * 50}ms` }}
                       >
-                        <TableCell className="font-medium">{client.name}</TableCell>
+                        <TableCell className="font-medium flex items-center gap-2">
+                          {client.name}
+                          <a
+                            href={`/client-lead-transfers/${client.id}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            title="View transferred leads"
+                            className="inline-flex items-center hover:text-blue-600"
+                          >
+                            <ExternalLink className="h-4 w-4 ml-1" />
+                          </a>
+                        </TableCell>
                         <TableCell>{client.email}</TableCell>
                         <TableCell>{client.company}</TableCell>
                         <TableCell>{client.phone}</TableCell>

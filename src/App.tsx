@@ -24,6 +24,7 @@ import CategoryView from "./pages/CategoryView";
 import AddCategory from "./pages/AddCategory";
 import LeadsBySubCategory from "./pages/LeadsBySubCategory";
 import ClientManage from "./pages/ClientManage";
+import ClientLeadTransfersPage from "./pages/ClientLeadTransfersPage";
 // import AllSubCategory from "./components/AllSubCategory";
 
 // Create a layout component that includes the sidebar
@@ -76,6 +77,7 @@ const App = () => (
               <Route path="fields/view" element={<FieldsView />} />
               <Route path="leadsbysubcategory" element={<LeadsBySubCategory />} />
               <Route path="client-manage" element={<ClientManage />} />
+              <Route path="client-lead-transfers/:clientId" element={<ClientLeadTransfersPage />} />
               <Route path="*" element={<NotFound />} />
             </Route>
           </Route>
