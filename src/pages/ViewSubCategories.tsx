@@ -221,7 +221,13 @@ const ViewSubCategories = () => {
                       setUploadedFileName('');
                       try {
                         let url = await uploadFile(file);
-                        if (typeof url === 'object' && url !== null && 'url' in url && (url as any).url != null) {
+                        if (
+                          typeof url === 'object' &&
+                          url !== null &&
+                          'url' in url &&
+                          (url as any).url !== undefined &&
+                          (url as any).url !== null
+                        ) {
                           url = (url as any).url as string;
                         }
                         setEditImageUrl(typeof url === 'string' ? url : '');

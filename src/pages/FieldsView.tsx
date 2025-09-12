@@ -159,10 +159,27 @@ const FieldsView = () => {
     }
   };
 
+  // Delete dialog state
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+  const [deleteTargetName, setDeleteTargetName] = useState<string | null>(null);
+
   const handleDeleteField = async (id: string) => {
+    setDeleteTargetId(id);
+    // Find the field name for dialog display
+    const field = fields.find(f => f.id === id);
+    setDeleteTargetName(field ? field.label || field.name || '' : '');
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDeleteField = async () => {
+    if (!deleteTargetId) return;
     try {
-      await deleteField(id);
+      await deleteField(deleteTargetId);
       fetchFields();
+      setDeleteDialogOpen(false);
+      setDeleteTargetId(null);
+      setDeleteTargetName(null);
     } catch (err) {
       // handle error (show toast, etc.)
     }
@@ -412,6 +429,27 @@ const FieldsView = () => {
                               <Trash2 className="h-4 w-4 mr-1" /> 
                               Delete
                             </Button>
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Field</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">Are you sure you want to delete <span className="font-semibold">{deleteTargetName}</span>?</div>
+          <DialogFooter>
+            <Button
+              variant="destructive"
+              onClick={confirmDeleteField}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Yes, Delete
+            </Button>
+            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
+              Cancel
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
                           </div>
                         </TableCell>
                       </TableRow>
