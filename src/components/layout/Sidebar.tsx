@@ -41,9 +41,7 @@ const Sidebar = () => {
         className={`w-64 h-screen border-r border-border bg-white flex flex-col overflow-hidden fixed top-0 left-0 z-40 transition-transform duration-300 sm:relative sm:translate-x-0 ${open ? 'translate-x-0' : '-translate-x-full sm:translate-x-0'}`}
       >
         <div className="p-5 border-b border-gray-100 flex justify-center">
-          <span className="font-display text-xl font-semibold text-gray-900">
-            Gounicrew
-          </span>
+          <img src="/applogo.png" alt="App Logo" className="h-10 w-auto" />
         </div>
 
         <ScrollArea className="flex-1">
