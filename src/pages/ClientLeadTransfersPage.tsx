@@ -32,7 +32,19 @@ const ClientLeadTransfersPage: React.FC = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50 p-2 sm:p-4">
-      <h1 className="text-2xl sm:text-3xl font-bold mb-4 text-center">Leads Transferred to Client #{clientId}</h1>
+      <div className="relative max-w-5xl mx-auto mb-4">
+        <button
+          type="button"
+          aria-label="Back"
+          onClick={() => window.history.back()}
+          className="fixed left-2 top-2 z-20 p-2 rounded-full bg-white shadow hover:bg-gray-200 focus:outline-none"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6 text-gray-700">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+          </svg>
+        </button>
+        <h1 className="text-2xl sm:text-3xl font-bold text-center">Leads Transferred to Client #{clientId}</h1>
+      </div>
       <div className="max-w-5xl w-full mx-auto">
         <div className="bg-white rounded shadow overflow-x-auto">
           {loading ? (

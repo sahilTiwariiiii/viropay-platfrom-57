@@ -21,6 +21,7 @@ import {
   Loader2,
   ExternalLink
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 import { 
   Client, 
@@ -45,6 +46,7 @@ type DialogMode = 'create' | 'edit' | 'view' | null;
 
 export const ClientsDashboard: React.FC = () => {
   const [clients, setClients] = useState<Client[]>([]);
+  const navigate = useNavigate();
   const [totalClients, setTotalClients] = useState(0);
   const [currentPage, setCurrentPage] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
@@ -333,15 +335,14 @@ export const ClientsDashboard: React.FC = () => {
                       >
                         <TableCell className="font-medium flex items-center gap-2">
                           {client.name}
-                          <a
-                            href={`/client-lead-transfers/${client.id}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
+                          <button
+                            type="button"
                             title="View transferred leads"
-                            className="inline-flex items-center hover:text-blue-600"
+                            className="inline-flex items-center hover:text-blue-600 focus:outline-none"
+                            onClick={() => navigate(`/client-lead-transfers/${client.id}`)}
                           >
                             <ExternalLink className="h-4 w-4 ml-1" />
-                          </a>
+                          </button>
                         </TableCell>
                         <TableCell>{client.email}</TableCell>
                         <TableCell>{client.company}</TableCell>
