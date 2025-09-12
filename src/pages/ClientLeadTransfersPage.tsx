@@ -32,18 +32,18 @@ const ClientLeadTransfersPage: React.FC = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50 p-2 sm:p-4">
-      <div className="relative max-w-5xl mx-auto mb-4">
+      <div className="max-w-5xl mx-auto mb-4 flex flex-col sm:flex-row items-start sm:items-center" style={{minHeight:'56px'}}>
         <button
           type="button"
           aria-label="Back"
           onClick={() => window.history.back()}
-          className="fixed left-2 top-2 z-20 p-2 rounded-full bg-white shadow hover:bg-gray-200 focus:outline-none"
+          className="mb-4 sm:mb-0 p-2 rounded-full bg-white shadow hover:bg-gray-200 focus:outline-none flex-shrink-0"
         >
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6 text-gray-700">
             <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
           </svg>
         </button>
-        <h1 className="text-2xl sm:text-3xl font-bold text-center">Leads Transferred to Client #{clientId}</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-foreground ml-0 sm:ml-4 truncate">Leads Transferred to Client #{clientId}</h1>
       </div>
       <div className="max-w-5xl w-full mx-auto">
         <div className="bg-white rounded shadow overflow-x-auto">
@@ -121,9 +121,18 @@ const ClientLeadTransfersPage: React.FC = () => {
       <Dialog open={detailsDialogOpen} onOpenChange={setDetailsDialogOpen}>
         <DialogContent className="max-w-2xl p-0">
           <div className="flex flex-col max-h-[90vh] w-full">
-            <div className="flex-1 p-6 overflow-y-auto">
+            <div className="flex-1 p-6 overflow-y-auto scrollbar-hide relative">
               <DialogHeader>
                 <DialogTitle className="text-xl mb-4">Lead Details</DialogTitle>
+                <button
+                  type="button"
+                  aria-label="Close"
+                  onClick={() => setDetailsDialogOpen(false)}
+                  className="absolute right-4 top-4 text-gray-400 hover:text-gray-600 z-10 dialog-close-no-outline"
+                  tabIndex={0}
+                >
+                 
+                </button>
               </DialogHeader>
               {!selectedLead ? (
                 <div className="text-center py-10 text-muted-foreground">Loading...</div>
@@ -197,7 +206,21 @@ const ClientLeadTransfersPage: React.FC = () => {
         </DialogContent>
       </Dialog>
     </div>
+  // ...existing code...
   );
 };
 
+
 export default ClientLeadTransfersPage;
+
+// Hide scrollbar utility and remove close button focus ring
+const style = document.createElement('style');
+style.innerHTML = `
+  .scrollbar-hide::-webkit-scrollbar { display: none !important; }
+  .scrollbar-hide { -ms-overflow-style: none !important; scrollbar-width: none !important; }
+  .dialog-close-no-outline:focus { box-shadow: none !important; border: none !important; outline: none !important; }
+`;
+if (typeof document !== 'undefined' && !document.getElementById('client-lead-transfers-style')) {
+  style.id = 'client-lead-transfers-style';
+  document.head.appendChild(style);
+}

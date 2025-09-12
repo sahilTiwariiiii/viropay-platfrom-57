@@ -42,7 +42,7 @@ const Sidebar = () => {
       >
         <div className="p-5 border-b border-gray-100 flex justify-center">
           <span className="font-display text-xl font-semibold text-gray-900">
-            viropay
+            Gounicrew
           </span>
         </div>
 

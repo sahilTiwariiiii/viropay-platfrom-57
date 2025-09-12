@@ -39,9 +39,10 @@ const AppLayout = () => {
   );
 };
 
-// Fix for the redirect - use Navigate component instead of window.location
-const RedirectToDashboard = () => {
-  return <Navigate to="/dashboard" replace />;
+
+// Redirect to /category by default
+const RedirectToCategory = () => {
+  return <Navigate to="/category" replace />;
 };
 
 const queryClient = new QueryClient();
@@ -54,7 +55,7 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<Login />} />
-          <Route path="/" element={<RedirectToDashboard />} />
+          <Route path="/" element={<RedirectToCategory />} />
           {/* <Route path="/" element={<AllSubCategory />} /> */}
           <Route element={<RequireAuth />}>
             <Route path="/" element={<AppLayout />}>

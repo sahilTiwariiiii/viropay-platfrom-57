@@ -89,7 +89,7 @@ const LeadsBySubCategory = () => {
             <h1 className="text-xl sm:text-2xl font-bold leading-tight text-foreground break-words">
               Leads for <span className="text-primary">{subcategoryName}</span>
             </h1>
-          </div>
+          </div> 
           <div className="w-full sm:w-auto flex justify-end sm:justify-start">
             <Button
               className="bg-saas-blue hover:bg-saas-blue/90"
@@ -261,6 +261,7 @@ const LeadsBySubCategory = () => {
                         <Checkbox checked={selectedLeads.length === leads.length && leads.length > 0} onCheckedChange={handleSelectAll} className="h-4 w-4 rounded-sm" />
                       </TableHead>
                       <TableHead>Lead #</TableHead>
+                      <TableHead>Date</TableHead>
                       <TableHead>Actions</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -272,6 +273,9 @@ const LeadsBySubCategory = () => {
                             <Checkbox checked={selectedLeads.includes(lead.id)} onCheckedChange={() => handleSelectLead(lead.id)} className="h-4 w-4 rounded-sm" />
                           </TableCell>
                           <TableCell>Lead {idx + 1 + page * PAGE_SIZE}</TableCell>
+                          <TableCell>
+                            {lead.createdAt ? new Date(lead.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : '-'}
+                          </TableCell>
                           <TableCell>
                             <Button size="sm" variant="outline" onClick={() => handleViewDetails(lead.id)}>
                               View Details
@@ -365,14 +369,8 @@ const LeadsBySubCategory = () => {
                           <div className="text-base font-semibold text-blue-700">{leadDetails.status}</div>
                         </div>
                         {/* Source field removed as per user request */}
-                        <div>
-                          <div className="font-semibold text-xs text-muted-foreground mb-1">IP Address</div>
-                          <div className="text-sm text-foreground">{leadDetails.ipAddress}</div>
-                        </div>
-                        <div>
-                          <div className="font-semibold text-xs text-muted-foreground mb-1">User Agent</div>
-                          <div className="text-xs text-foreground break-all">{leadDetails.userAgent}</div>
-                        </div>
+
+
                         <div>
                           <div className="font-semibold text-xs text-muted-foreground mb-1">Created At</div>
                           <div className="text-sm text-foreground">
@@ -423,20 +421,24 @@ const LeadsBySubCategory = () => {
                                 return (
                                   <table className="w-full text-xs">
                                     <tbody>
-                                      {Object.entries(data).map(([k, v]) => (
-                                        <tr key={k} className="border-b last:border-b-0">
-                                          <td className="font-semibold pr-2 py-1 align-top text-muted-foreground whitespace-nowrap">{k}</td>
-                                          <td className="py-1">
-                                            {typeof v === 'string' && v.startsWith('http') ? (
-                                              <a href={v} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline break-all">{v}</a>
-                                            ) : typeof v === 'boolean' ? (
-                                              <span className={v ? 'text-green-600 font-bold' : 'text-red-500 font-bold'}>{v ? 'Yes' : 'No'}</span>
-                                            ) : (
-                                              <span>{String(v)}</span>
-                                            )}
-                                          </td>
-                                        </tr>
-                                      ))}
+                                      {Object.entries(data)
+                                        .filter(([k, v]) => k.toLowerCase() !== 'user agent')
+                                        .map(([k, v]) => (
+                                          <tr key={k} className="border-b last:border-b-0">
+                                            <td className="font-semibold pr-2 py-1 align-top text-muted-foreground whitespace-nowrap">{k}</td>
+                                            <td className="py-1">
+                                              {typeof v === 'string' && v.match(/^https?:\/\//) && (v.endsWith('.png') || v.endsWith('.jpg') || v.endsWith('.jpeg') || v.endsWith('.webp')) ? (
+                                                <img src={v} alt={k} className="max-h-32 rounded border mb-1" style={{maxWidth:'100%'}} />
+                                              ) : typeof v === 'string' && v.startsWith('http') ? (
+                                                <a href={v} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline break-all">{v}</a>
+                                              ) : typeof v === 'boolean' ? (
+                                                <span className={v ? 'text-green-600 font-bold' : 'text-red-500 font-bold'}>{v ? 'Yes' : 'No'}</span>
+                                              ) : (
+                                                <span>{String(v)}</span>
+                                              )}
+                                            </td>
+                                          </tr>
+                                        ))}
                                     </tbody>
                                   </table>
                                 );

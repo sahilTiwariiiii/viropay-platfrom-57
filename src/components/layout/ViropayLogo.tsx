@@ -47,7 +47,7 @@ const ViropayLogo: React.FC<ViropayLogoProps> = ({
       </svg>
       {showText && (
         <span className={`font-display ${text} font-semibold ${textColor}`}>
-          viropay
+          Gounicrew
         </span>
       )}
     </div>
