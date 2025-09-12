@@ -124,6 +124,21 @@ const LeadsBySubCategory = () => {
                 <div className="text-xs text-red-500">{clientsError}</div>
               ) : (
                 <div className="border rounded p-2 max-h-48 overflow-y-auto">
+                  {/* Select All Checkbox */}
+                  <div className="flex items-center gap-2 mb-2">
+                    <Checkbox
+                      checked={clients.length > 0 && selectedClients.length === clients.length}
+                      indeterminate={selectedClients.length > 0 && selectedClients.length < clients.length}
+                      onCheckedChange={() => {
+                        if (selectedClients.length === clients.length) {
+                          setSelectedClients([]);
+                        } else {
+                          setSelectedClients(clients.map(c => c.id));
+                        }
+                      }}
+                    />
+                    <span className="text-sm font-semibold">Select All</span>
+                  </div>
                   {clients.map(client => (
                     <div key={client.id} className="flex items-center justify-between py-1 border-b last:border-b-0">
                       <div className="flex items-center gap-2">
