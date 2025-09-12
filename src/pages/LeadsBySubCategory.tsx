@@ -7,6 +7,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
 import { getLeadsBySubcategory, getLeadDetails } from '@/api/leads';
+import { deleteLead } from '@/api/deleteLead';
 import { transferLeadsToClients, LeadTransferPayload } from '@/api/leadTransfers';
 import { getClients, getClientDetails, Client } from '@/api/clients';
 
@@ -33,6 +34,8 @@ const LeadsBySubCategory = () => {
   const [clients, setClients] = useState<Client[]>([]);
   const [clientsLoading, setClientsLoading] = useState(false);
   const [clientsError, setClientsError] = useState('');
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [leadToDelete, setLeadToDelete] = useState<any>(null);
   const [clientDetailsDialogOpen, setClientDetailsDialogOpen] = useState(false);
   const [clientDetails, setClientDetails] = useState<Client | null>(null);
   // Fetch clients when transfer dialog opens
@@ -279,11 +282,42 @@ const LeadsBySubCategory = () => {
                           <TableCell>
                             {lead.createdAt ? new Date(lead.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : '-'}
                           </TableCell>
-                          <TableCell>
+                          <TableCell className="flex gap-2">
                             <Button size="sm" variant="outline" onClick={() => handleViewDetails(lead.id)}>
                               View Details
                             </Button>
+                            <Button size="sm" variant="destructive" onClick={() => { setLeadToDelete(lead); setDeleteDialogOpen(true); }}>
+                              Delete
+                            </Button>
                           </TableCell>
+      {/* Delete Lead Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Delete Lead</DialogTitle>
+          </DialogHeader>
+          <div>Are you sure you want to delete this lead?</div>
+          <div className="flex justify-end gap-2 mt-6">
+            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
+            <Button
+              variant="destructive"
+              onClick={async () => {
+                if (!leadToDelete) return;
+                try {
+                  await deleteLead(leadToDelete.id);
+                  setLeads(leads.filter(l => l.id !== leadToDelete.id));
+                  setDeleteDialogOpen(false);
+                  setLeadToDelete(null);
+                } catch (err) {
+                  alert('Failed to delete lead');
+                }
+              }}
+            >
+              Yes, Delete
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
                         </TableRow>
                       ))
                     ) : (

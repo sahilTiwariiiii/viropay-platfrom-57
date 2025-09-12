@@ -8,8 +8,10 @@ import { useEffect, useState } from 'react';
 import { getCategories, Category } from '@/api/categories';
 import { updateCategory } from '@/api/updateCategory';
 import { deleteCategory } from '@/api/deleteCategory';
+
 import { Plus, Pencil, Trash, ExternalLink } from 'lucide-react';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 
 
@@ -22,6 +24,8 @@ const CategoryView = () => {
 	const [editName, setEditName] = useState('');
 	const [editDescription, setEditDescription] = useState('');
 	const [editLoading, setEditLoading] = useState(false);
+	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+	const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null);
 
 	const fetchCategories = async () => {
 		setLoading(true);
@@ -76,12 +80,19 @@ const CategoryView = () => {
 		setEditDescription('');
 	};
 
-	const handleDelete = async (id: number) => {
-		if (!window.confirm('Are you sure you want to delete this category?')) return;
+	const handleDelete = (category: Category) => {
+		setCategoryToDelete(category);
+		setDeleteDialogOpen(true);
+	};
+
+	const confirmDelete = async () => {
+		if (!categoryToDelete) return;
 		setLoading(true);
 		try {
-			await deleteCategory(id);
+			await deleteCategory(categoryToDelete.id);
 			fetchCategories();
+			setDeleteDialogOpen(false);
+			setCategoryToDelete(null);
 		} catch (err: any) {
 			alert(err.response?.data?.message || err.message || 'Failed to delete category');
 		} finally {
@@ -89,16 +100,16 @@ const CategoryView = () => {
 		}
 	};
 
-		return (
-			<div className="flex-1 flex flex-col overflow-hidden bg-gray-50">
-				<Header
-					title="All Categories"
-					subtitle="View and manage categories"
-					showBackButton={true}
-					onBackClick={() => navigate(-1)}
-				/>
-				   <main className="flex-1 overflow-y-auto p-2 sm:p-4 md:p-6 animate-fade-in">
-					   <Card className="w-full max-w-5xl mx-auto mb-8">
+			return (
+				<div className="flex-1 flex flex-col overflow-hidden bg-gray-50">
+					<Header
+						title="All Categories"
+						subtitle="View and manage categories"
+						showBackButton={true}
+						onBackClick={() => navigate(-1)}
+					/>
+					   <main className="flex-1 overflow-y-auto p-2 sm:p-4 md:p-6 animate-fade-in">
+						   <Card className="w-full max-w-5xl mx-auto mb-8">
 						   <CardContent className="p-2 sm:p-4 md:p-6">
 							   <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
 								   <h2 className="text-lg sm:text-xl font-semibold">All Categories</h2>
@@ -109,15 +120,15 @@ const CategoryView = () => {
 							   <div className="overflow-x-auto w-full">
 								   {loading ? (
 									   <div className="space-y-2">
-										 {[...Array(5)].map((_, i) => (
-										   <div key={i} className="animate-pulse flex space-x-4 py-2">
-											 <div className="h-6 bg-gray-200 rounded w-1/4" />
-											 <div className="h-6 bg-gray-200 rounded w-1/2" />
-											 <div className="h-6 bg-gray-200 rounded w-20" />
-										   </div>
-										 ))}
+									 {[...Array(5)].map((_, i) => (
+									   <div key={i} className="animate-pulse flex space-x-4 py-2">
+										 <div className="h-6 bg-gray-200 rounded w-1/4" />
+										 <div className="h-6 bg-gray-200 rounded w-1/2" />
+										 <div className="h-6 bg-gray-200 rounded w-20" />
 									   </div>
-								   ) : error ? (
+									 ))}
+								   </div>
+							   ) : error ? (
 									   <div className="text-center py-10 text-red-500">{error}</div>
 								   ) : (
 									   <Table>
@@ -194,15 +205,33 @@ const CategoryView = () => {
 																										<Pencil className="h-4 w-4 mr-1" /> Edit
 																									</Button>
 																								)}
-																								<Button
-																									variant="outline"
-																									size="sm"
-																									className="text-red-500 border-red-200 hover:bg-red-50"
-																									onClick={() => handleDelete(category.id)}
-																									disabled={editId === category.id}
-																								>
-																									<Trash className="h-4 w-4 mr-1" /> Delete
-																								</Button>
+																																							<Button
+																																								variant="outline"
+																																								size="sm"
+																																								className="text-red-500 border-red-200 hover:bg-red-50"
+																																								onClick={() => handleDelete(category)}
+																																								disabled={editId === category.id}
+																																							>
+																																								<Trash className="h-4 w-4 mr-1" /> Delete
+																																							</Button>
+	      {/* Delete Category Confirmation Dialog */}
+	      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+	        <DialogContent className="max-w-md">
+	          <DialogHeader>
+	            <DialogTitle>Delete Category</DialogTitle>
+	          </DialogHeader>
+	          <div>Are you sure you want to delete this category?</div>
+	          <div className="flex justify-end gap-2 mt-6">
+	            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
+	            <Button
+	              variant="destructive"
+	              onClick={confirmDelete}
+	            >
+	              Yes, Delete
+	            </Button>
+	          </div>
+	        </DialogContent>
+	      </Dialog>
 																							</div>
 																						</TableCell>
 																					</TableRow>
