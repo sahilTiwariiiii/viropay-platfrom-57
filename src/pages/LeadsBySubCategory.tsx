@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import Header from '@/components/layout/Header';
 import { Card, CardContent } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
@@ -83,13 +84,15 @@ const LeadsBySubCategory = () => {
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden bg-gray-50 min-h-screen">
+      <Header
+        title={`Leads for ${subcategoryName || ''}`}
+        subtitle={null}
+      />
       <div className="w-full px-2 pt-4 pb-2 flex flex-col gap-1">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
           <div className="w-full sm:w-auto mt-10 sm:mt-0">
-            <h1 className="text-xl sm:text-2xl font-bold leading-tight text-foreground break-words">
-              Leads for <span className="text-primary">{subcategoryName}</span>
-            </h1>
-          </div> 
+            {/* Heading moved to Header */}
+          </div>
           <div className="w-full sm:w-auto flex justify-end sm:justify-start">
             <Button
               className="bg-saas-blue hover:bg-saas-blue/90"
