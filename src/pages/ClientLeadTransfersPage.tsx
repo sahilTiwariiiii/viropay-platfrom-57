@@ -36,7 +36,29 @@ const ClientLeadTransfersPage: React.FC = () => {
       <div className="max-w-5xl w-full mx-auto">
         <div className="bg-white rounded shadow overflow-x-auto">
           {loading ? (
-            <div className="p-8 text-center text-lg">Loading...</div>
+              <div className="p-8">
+                <div className="animate-pulse space-y-4">
+                  {[...Array(6)].map((_, i) => (
+                    <div key={i} className="flex items-center gap-4">
+                      <div className="h-6 w-24 bg-gray-200 rounded shimmer" />
+                      <div className="h-6 w-20 bg-gray-200 rounded shimmer" />
+                      <div className="h-6 w-40 bg-gray-200 rounded shimmer" />
+                      <div className="h-8 w-24 bg-gray-200 rounded shimmer" />
+                    </div>
+                  ))}
+                </div>
+                <style>{`
+                  .shimmer {
+                    background: linear-gradient(90deg, #f3f3f3 25%, #e0e0e0 50%, #f3f3f3 75%);
+                    background-size: 200% 100%;
+                    animation: shimmer 1.2s infinite linear;
+                  }
+                  @keyframes shimmer {
+                    0% { background-position: -200% 0; }
+                    100% { background-position: 200% 0; }
+                  }
+                `}</style>
+              </div>
           ) : error ? (
             <div className="p-8 text-center text-red-500">{error}</div>
           ) : (
@@ -86,7 +108,7 @@ const ClientLeadTransfersPage: React.FC = () => {
       {/* Lead Details Modal */}
       <Dialog open={detailsDialogOpen} onOpenChange={setDetailsDialogOpen}>
         <DialogContent className="max-w-2xl p-0">
-          <div className="flex flex-col md:flex-row max-h-[90vh] w-full">
+          <div className="flex flex-col max-h-[90vh] w-full">
             <div className="flex-1 p-6 overflow-y-auto">
               <DialogHeader>
                 <DialogTitle className="text-xl mb-4">Lead Details</DialogTitle>
@@ -112,25 +134,48 @@ const ClientLeadTransfersPage: React.FC = () => {
                     <div className="text-sm text-foreground whitespace-pre-line">{selectedLead.notes || '-'}</div>
                   </div>
                   <div>
-                    <div className="font-semibold text-xs text-muted-foreground mb-1">IP Address</div>
-                    <div className="text-sm text-foreground">{selectedLead.ipAddress}</div>
-                  </div>
-                  <div className="sm:col-span-2">
-                    <div className="font-semibold text-xs text-muted-foreground mb-1">User Agent</div>
-                    <div className="text-xs text-foreground break-all">{selectedLead.userAgent}</div>
-                  </div>
-                  <div>
                     <div className="font-semibold text-xs text-muted-foreground mb-1">Created At</div>
-                    <div className="text-sm text-foreground">{selectedLead.createdAt ? new Date(selectedLead.createdAt).toLocaleString() : '-'}</div>
+                    <div className="text-sm text-foreground">{selectedLead.createdAt ? new Date(selectedLead.createdAt).toLocaleString('en-US', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }) : '-'}</div>
                   </div>
                   <div>
                     <div className="font-semibold text-xs text-muted-foreground mb-1">Updated At</div>
-                    <div className="text-sm text-foreground">{selectedLead.updateAt ? new Date(selectedLead.updateAt).toLocaleString() : '-'}</div>
+                    <div className="text-sm text-foreground">{selectedLead.updateAt ? new Date(selectedLead.updateAt).toLocaleString('en-US', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }) : '-'}</div>
                   </div>
                   <div className="sm:col-span-2">
                     <div className="font-semibold text-xs text-muted-foreground mb-1">Lead Data</div>
                     <div className="bg-gray-50 border rounded p-3 overflow-x-auto text-xs">
-                      <pre className="whitespace-pre-wrap break-words">{JSON.stringify(selectedLead.dataJson, null, 2)}</pre>
+                      {(() => {
+                        let data;
+                        try {
+                          data = typeof selectedLead.dataJson === 'string' ? JSON.parse(selectedLead.dataJson) : selectedLead.dataJson;
+                        } catch {
+                          data = selectedLead.dataJson;
+                        }
+                        if (typeof data === 'object' && data !== null) {
+                          return (
+                            <table className="w-full text-xs">
+                              <tbody>
+                                {Object.entries(data).map(([k, v]) => (
+                                  <tr key={k} className="border-b last:border-b-0">
+                                    <td className="font-semibold pr-2 py-1 align-top text-muted-foreground whitespace-nowrap">{k}</td>
+                                    <td className="py-1">
+                                      {typeof v === 'string' && v.match(/^https?:\/\//) && (v.endsWith('.png') || v.endsWith('.jpg') || v.endsWith('.jpeg') || v.endsWith('.webp')) ? (
+                                        <img src={v} alt={k} className="max-h-32 rounded border mb-1" style={{maxWidth:'100%'}} />
+                                      ) : Array.isArray(v) ? (
+                                        v.map((item, idx) => <span key={idx} className="inline-block mr-1 px-2 py-0.5 bg-gray-200 rounded text-xs">{String(item)}</span>)
+                                      ) : (
+                                        <span>{String(v)}</span>
+                                      )}
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          );
+                        } else {
+                          return <span className="text-xs text-foreground">{String(data)}</span>;
+                        }
+                      })()}
                     </div>
                   </div>
                 </div>
