@@ -6,6 +6,7 @@ export interface SubCategory {
   description: string;
   categoryId: number;
   active?: boolean;
+  imageUrl?: string;
 }
 
 export const getSubCategoriesByCategory = async (

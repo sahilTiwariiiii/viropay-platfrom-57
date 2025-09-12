@@ -8,8 +8,9 @@ import { uploadFile } from '@/api/uploadFile';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 // ...existing code...
 import { Input } from '@/components/ui/input';
-import { Plus, Pencil, Trash } from 'lucide-react';
+import { Plus, Pencil, Trash, Image as LucideImage } from 'lucide-react';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 
 const ViewSubCategories = () => {
   const navigate = useNavigate();
@@ -30,6 +31,10 @@ const ViewSubCategories = () => {
   const [editActive, setEditActive] = useState(true);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [uploadedFileName, setUploadedFileName] = useState('');
+
+  // Dialog state for delete confirmation
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<SubCategory | null>(null);
 
   useEffect(() => {
     if (!categoryId) return;
@@ -108,7 +113,24 @@ const ViewSubCategories = () => {
                       subcategories.map((subCategory: SubCategory) => (
                         <TableRow key={subCategory.id} className="hover:bg-gray-50">
                           <TableCell>
-                            <span className="font-medium">{subCategory.name}</span>
+                            <div className="flex items-center gap-4">
+                              <Avatar className="h-8 w-8">
+                                {subCategory.imageUrl ? (
+                                  <AvatarImage
+                                    src={subCategory.imageUrl}
+                                    alt={subCategory.name}
+                                    onError={e => {
+                                      // Hide broken image, fallback will show
+                                      (e.target as HTMLImageElement).style.display = 'none';
+                                    }}
+                                  />
+                                ) : null}
+                                <AvatarFallback className="bg-gray-200">
+                                  <LucideImage className="h-4 w-4 text-gray-400" />
+                                </AvatarFallback>
+                              </Avatar>
+                              <span className="font-medium">{subCategory.name}</span>
+                            </div>
                           </TableCell>
                           <TableCell>
                             <span className="text-sm text-gray-700">
@@ -198,8 +220,11 @@ const ViewSubCategories = () => {
                       setUploadingImage(true);
                       setUploadedFileName('');
                       try {
-                        const url = await uploadFile(file);
-                        setEditImageUrl(url.url || url); // handle both {url: ...} and string
+                        let url = await uploadFile(file);
+                        if (typeof url === 'object' && url !== null && 'url' in url && (url as any).url != null) {
+                          url = (url as any).url;
+                        }
+                        setEditImageUrl(typeof url === 'string' ? url : '');
                         setUploadedFileName(file.name);
                       } catch (err: any) {
                         alert('Image upload failed!');
@@ -278,21 +303,47 @@ const ViewSubCategories = () => {
                                 variant="outline"
                                 size="sm"
                                 className="text-red-500 border-red-200 hover:bg-red-50"
-                                onClick={async () => {
-                                  if (!window.confirm('Are you sure you want to delete this subcategory?')) return;
-                                  try {
-                                    setLoading(true);
-                                    await deleteSubCategory(subCategory.id);
-                                    setSubcategories(subcategories => subcategories.filter(s => s.id !== subCategory.id));
-                                  } catch (err: any) {
-                                    alert(err?.response?.data?.message || err.message || 'Failed to delete subcategory');
-                                  } finally {
-                                    setLoading(false);
-                                  }
+                                onClick={() => {
+                                  setDeleteTarget(subCategory);
+                                  setDeleteDialogOpen(true);
                                 }}
                               >
                                 <Trash className="h-4 w-4 mr-1" /> Delete
                               </Button>
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Subcategory</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">Are you sure you want to delete <span className="font-semibold">{deleteTarget?.name}</span>?</div>
+          <DialogFooter>
+            <Button
+              variant="destructive"
+              onClick={async () => {
+                if (!deleteTarget) return;
+                try {
+                  setLoading(true);
+                  await deleteSubCategory(deleteTarget.id);
+                  setSubcategories(subcategories => subcategories.filter(s => s.id !== deleteTarget.id));
+                  setDeleteDialogOpen(false);
+                  setDeleteTarget(null);
+                } catch (err: any) {
+                  alert(err?.response?.data?.message || err.message || 'Failed to delete subcategory');
+                } finally {
+                  setLoading(false);
+                }
+              }}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Yes, Delete
+            </Button>
+            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
+              Cancel
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
                             </div>
                           </TableCell>
                         </TableRow>
