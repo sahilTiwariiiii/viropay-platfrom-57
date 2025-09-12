@@ -6,6 +6,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
 import { getLeadsBySubcategory, getLeadDetails } from '@/api/leads';
+import { transferLeadsToClients, LeadTransferPayload } from '@/api/leadTransfers';
 
 const PAGE_SIZE = 20;
 
@@ -22,6 +23,11 @@ const LeadsBySubCategory = () => {
   const [selectedLeads, setSelectedLeads] = useState<number[]>([]);
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
   const [leadDetails, setLeadDetails] = useState<any>(null);
+  const [transferDialogOpen, setTransferDialogOpen] = useState(false);
+  const [transferLoading, setTransferLoading] = useState(false);
+  const [transferError, setTransferError] = useState('');
+  const [transferNotes, setTransferNotes] = useState('');
+  const [selectedClients, setSelectedClients] = useState<number[]>([]); // For demo, you may want to fetch clients
 
   useEffect(() => {
     if (!subcategoryId) return;
@@ -68,12 +74,86 @@ const LeadsBySubCategory = () => {
             </h1>
           </div>
           <div className="w-full sm:w-auto flex justify-end sm:justify-start">
-            <Button className="bg-saas-blue hover:bg-saas-blue/90" onClick={() => {}}>
+            <Button
+              className="bg-saas-blue hover:bg-saas-blue/90"
+              onClick={() => setTransferDialogOpen(true)}
+              disabled={selectedLeads.length === 0}
+            >
               Transfer to Clients
             </Button>
           </div>
         </div>
       </div>
+      {/* Transfer to Clients Modal */}
+      <Dialog open={transferDialogOpen} onOpenChange={setTransferDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Transfer Leads to Clients</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">Selected Lead IDs</label>
+              <div className="flex flex-wrap gap-2">
+                {selectedLeads.map(id => (
+                  <span key={id} className="px-2 py-1 bg-gray-200 rounded text-xs">{id}</span>
+                ))}
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Client IDs (comma separated)</label>
+              <input
+                type="text"
+                className="w-full border rounded px-2 py-1"
+                placeholder="e.g. 1,2,3"
+                value={selectedClients.join(",")}
+                onChange={e => {
+                  const val = e.target.value.split(',').map(v => parseInt(v.trim(), 10)).filter(Boolean);
+                  setSelectedClients(val);
+                }}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Notes (optional)</label>
+              <textarea
+                className="w-full border rounded px-2 py-1"
+                rows={2}
+                value={transferNotes}
+                onChange={e => setTransferNotes(e.target.value)}
+                placeholder="September campaign"
+              />
+            </div>
+            {transferError && <div className="text-red-500 text-sm">{transferError}</div>}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setTransferDialogOpen(false)} disabled={transferLoading}>Cancel</Button>
+            <Button
+              className="bg-saas-blue hover:bg-saas-blue/90"
+              disabled={transferLoading || selectedClients.length === 0}
+              onClick={async () => {
+                setTransferLoading(true);
+                setTransferError("");
+                try {
+                  await transferLeadsToClients({
+                    leadIds: selectedLeads,
+                    clientIds: selectedClients,
+                    notes: transferNotes,
+                  });
+                  setTransferDialogOpen(false);
+                  setSelectedLeads([]);
+                  setSelectedClients([]);
+                  setTransferNotes("");
+                } catch (err: any) {
+                  setTransferError(err?.response?.data?.message || "Failed to transfer leads");
+                } finally {
+                  setTransferLoading(false);
+                }
+              }}
+            >
+              {transferLoading ? "Transferring..." : "Transfer"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       <main className="flex-1 overflow-y-auto p-2 sm:p-4 md:p-6 animate-fade-in">
         <Card className="w-full max-w-5xl mx-auto mb-8">
           <CardContent className="p-2 sm:p-4 md:p-6">
