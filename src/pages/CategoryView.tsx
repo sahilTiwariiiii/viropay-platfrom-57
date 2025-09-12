@@ -113,7 +113,7 @@ const CategoryView = () => {
 						   <CardContent className="p-2 sm:p-4 md:p-6">
 							   <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
 								   <h2 className="text-lg sm:text-xl font-semibold">All Categories</h2>
-								   <Button onClick={handleAddCategory} className="bg-saas-blue hover:bg-saas-blue/90 w-full sm:w-auto">
+								   <Button onClick={handleAddCategory} className="w-full sm:w-auto" style={{ backgroundColor: '#3f5cee', color: 'white' }}>
 									   <Plus className="mr-2 h-4 w-4" /> Add Category
 								   </Button>
 							   </div>

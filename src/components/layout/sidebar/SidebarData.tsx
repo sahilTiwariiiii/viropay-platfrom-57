@@ -8,7 +8,9 @@ import {
   Plug,
   Calendar,
   FileText,
-  Users
+  Users,
+  List,
+  PlusCircle
 } from 'lucide-react';
 
 import { SidebarItemProps } from './SidebarItem';
@@ -26,8 +28,8 @@ export const getSidebarMenuItems = (): SidebarMenuItem[] => {
       href: "/categories", 
       hasSubmenu: true,
       submenuItems: [
-        { label: "View All", href: "/category" },
-        { label: "Add New", href: "/category/add" }
+        { label: "View All", href: "/category", icon: <List className="w-4 h-4 mr-2" /> },
+        { label: "Add New", href: "/category/add", icon: <PlusCircle className="w-4 h-4 mr-2" /> }
       ],
       category: "modules" 
     },

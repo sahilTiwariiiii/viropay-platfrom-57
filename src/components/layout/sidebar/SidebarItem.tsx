@@ -10,7 +10,7 @@ export interface SidebarItemProps {
   href: string;
   isActive?: boolean;
   hasSubmenu?: boolean;
-  submenuItems?: { label: string; href: string }[];
+  submenuItems?: { label: string; href: string; icon?: React.ReactNode }[];
   onClick?: () => void;
 }
 
@@ -66,8 +66,9 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
             <Link 
               key={index}
               to={item.href}
-              className="block py-2 px-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded"
+              className="flex items-center py-2 px-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded"
             >
+              {item.icon && <span className="mr-2">{item.icon}</span>}
               {item.label}
             </Link>
           ))}
