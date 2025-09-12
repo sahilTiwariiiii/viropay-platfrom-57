@@ -71,8 +71,8 @@ export const getSidebarMenuItems = (): SidebarMenuItem[] => {
     },
     { 
       icon: <HelpCircle className="w-5 h-5" />, 
-      label: "Lead Clients Manage", 
-      href: "/demo/help", 
+      label: "Clients Manage", 
+      href: "/client-manage", 
       category: "system"
     }
    
