@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogC
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
 import { getLeadsBySubcategory, getLeadDetails } from '@/api/leads';
 import { transferLeadsToClients, LeadTransferPayload } from '@/api/leadTransfers';
+import { getClients, getClientDetails, Client } from '@/api/clients';
 
 const PAGE_SIZE = 20;
 
@@ -27,7 +28,23 @@ const LeadsBySubCategory = () => {
   const [transferLoading, setTransferLoading] = useState(false);
   const [transferError, setTransferError] = useState('');
   const [transferNotes, setTransferNotes] = useState('');
-  const [selectedClients, setSelectedClients] = useState<number[]>([]); // For demo, you may want to fetch clients
+  const [selectedClients, setSelectedClients] = useState<number[]>([]);
+  const [clients, setClients] = useState<Client[]>([]);
+  const [clientsLoading, setClientsLoading] = useState(false);
+  const [clientsError, setClientsError] = useState('');
+  const [clientDetailsDialogOpen, setClientDetailsDialogOpen] = useState(false);
+  const [clientDetails, setClientDetails] = useState<Client | null>(null);
+  // Fetch clients when transfer dialog opens
+  useEffect(() => {
+    if (transferDialogOpen) {
+      setClientsLoading(true);
+      setClientsError('');
+      getClients('', 0, 20)
+        .then(data => setClients(data.content || []))
+        .catch(() => setClientsError('Failed to load clients'))
+        .finally(() => setClientsLoading(false));
+    }
+  }, [transferDialogOpen]);
 
   useEffect(() => {
     if (!subcategoryId) return;
@@ -86,7 +103,7 @@ const LeadsBySubCategory = () => {
       </div>
       {/* Transfer to Clients Modal */}
       <Dialog open={transferDialogOpen} onOpenChange={setTransferDialogOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>Transfer Leads to Clients</DialogTitle>
           </DialogHeader>
@@ -100,17 +117,41 @@ const LeadsBySubCategory = () => {
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Client IDs (comma separated)</label>
-              <input
-                type="text"
-                className="w-full border rounded px-2 py-1"
-                placeholder="e.g. 1,2,3"
-                value={selectedClients.join(",")}
-                onChange={e => {
-                  const val = e.target.value.split(',').map(v => parseInt(v.trim(), 10)).filter(Boolean);
-                  setSelectedClients(val);
-                }}
-              />
+              <label className="block text-sm font-medium mb-1">Select Clients</label>
+              {clientsLoading ? (
+                <div className="text-xs text-gray-500">Loading clients...</div>
+              ) : clientsError ? (
+                <div className="text-xs text-red-500">{clientsError}</div>
+              ) : (
+                <div className="border rounded p-2 max-h-48 overflow-y-auto">
+                  {clients.map(client => (
+                    <div key={client.id} className="flex items-center justify-between py-1 border-b last:border-b-0">
+                      <div className="flex items-center gap-2">
+                        <Checkbox
+                          checked={selectedClients.includes(client.id)}
+                          onCheckedChange={() => {
+                            setSelectedClients(selectedClients.includes(client.id)
+                              ? selectedClients.filter(cid => cid !== client.id)
+                              : [...selectedClients, client.id]);
+                          }}
+                        />
+                        <span className="text-sm font-medium">{client.name}</span>
+                      </div>
+                      <Button size="sm" variant="outline" onClick={async () => {
+                        setClientDetailsDialogOpen(true);
+                        setClientDetails(null);
+                        try {
+                          const details = await getClientDetails(client.id);
+                          setClientDetails(details);
+                        } catch {
+                          setClientDetails({ ...client, error: 'Failed to load details' });
+                        }
+                      }}>View Details</Button>
+                    </div>
+                  ))}
+                  {clients.length === 0 && <div className="text-xs text-gray-500">No clients found.</div>}
+                </div>
+              )}
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">Notes (optional)</label>
@@ -152,6 +193,32 @@ const LeadsBySubCategory = () => {
               {transferLoading ? "Transferring..." : "Transfer"}
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Client Details Modal */}
+      <Dialog open={clientDetailsDialogOpen} onOpenChange={setClientDetailsDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Client Details</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2">
+            {!clientDetails ? (
+              <div className="text-xs text-gray-500">Loading...</div>
+            ) : clientDetails.error ? (
+              <div className="text-xs text-red-500">{clientDetails.error}</div>
+            ) : (
+              <div className="space-y-1">
+                <div><span className="font-semibold">Name:</span> {clientDetails.name}</div>
+                <div><span className="font-semibold">Email:</span> {clientDetails.email}</div>
+                <div><span className="font-semibold">Company:</span> {clientDetails.company}</div>
+                <div><span className="font-semibold">Phone:</span> {clientDetails.phone}</div>
+                <div><span className="font-semibold">Address:</span> {clientDetails.address}</div>
+                <div><span className="font-semibold">Description:</span> {clientDetails.description}</div>
+                <div><span className="font-semibold">Active:</span> {clientDetails.active ? 'Yes' : 'No'}</div>
+              </div>
+            )}
+          </div>
         </DialogContent>
       </Dialog>
       <main className="flex-1 overflow-y-auto p-2 sm:p-4 md:p-6 animate-fade-in">
