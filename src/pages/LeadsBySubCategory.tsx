@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import axios from 'axios';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import Header from '@/components/layout/Header';
@@ -38,6 +39,7 @@ const LeadsBySubCategory = () => {
   const [leadToDelete, setLeadToDelete] = useState<any>(null);
   const [clientDetailsDialogOpen, setClientDetailsDialogOpen] = useState(false);
   const [clientDetails, setClientDetails] = useState<Client | null>(null);
+  const [clientDetailsError, setClientDetailsError] = useState<string | null>(null);
   // Fetch clients when transfer dialog opens
   useEffect(() => {
     if (transferDialogOpen) {
@@ -96,13 +98,40 @@ const LeadsBySubCategory = () => {
           <div className="w-full sm:w-auto mt-10 sm:mt-0">
             {/* Heading moved to Header */}
           </div>
-          <div className="w-full sm:w-auto flex justify-end sm:justify-start">
+          <div className="w-full sm:w-auto flex justify-end sm:justify-start gap-2">
             <Button
               className="bg-saas-blue hover:bg-saas-blue/90"
               onClick={() => setTransferDialogOpen(true)}
               disabled={selectedLeads.length === 0}
             >
               Transfer to Clients
+            </Button>
+            <Button
+              className="bg-saas-blue hover:bg-saas-blue/90"
+              onClick={async () => {
+                try {
+                  const params = new URLSearchParams({
+                    subcategoryId: subcategoryId || '',
+                    status: '',
+                    page: '0',
+                    size: '100',
+                  });
+                  const response = await axios.get(`/api/v1/leads/export?${params.toString()}`, {
+                    responseType: 'blob',
+                  });
+                  const url = window.URL.createObjectURL(new Blob([response.data]));
+                  const link = document.createElement('a');
+                  link.href = url;
+                  link.setAttribute('download', `leads_export_${subcategoryName || 'all'}.csv`);
+                  document.body.appendChild(link);
+                  link.click();
+                  link.parentNode?.removeChild(link);
+                } catch (err) {
+                  alert('Failed to export leads.');
+                }
+              }}
+            >
+              Export to Excel
             </Button>
           </div>
         </div>
@@ -134,7 +163,6 @@ const LeadsBySubCategory = () => {
                   <div className="flex items-center gap-2 mb-2">
                     <Checkbox
                       checked={clients.length > 0 && selectedClients.length === clients.length}
-                      indeterminate={selectedClients.length > 0 && selectedClients.length < clients.length}
                       onCheckedChange={() => {
                         if (selectedClients.length === clients.length) {
                           setSelectedClients([]);
@@ -161,11 +189,12 @@ const LeadsBySubCategory = () => {
                       <Button size="sm" variant="outline" onClick={async () => {
                         setClientDetailsDialogOpen(true);
                         setClientDetails(null);
+                        setClientDetailsError(null);
                         try {
                           const details = await getClientDetails(client.id);
                           setClientDetails(details);
                         } catch {
-                          setClientDetails({ ...client, error: 'Failed to load details' });
+                          setClientDetailsError('Failed to load details');
                         }
                       }}>View Details</Button>
                     </div>
@@ -224,11 +253,11 @@ const LeadsBySubCategory = () => {
             <DialogTitle>Client Details</DialogTitle>
           </DialogHeader>
           <div className="space-y-2">
-            {!clientDetails ? (
+            {!clientDetails && !clientDetailsError ? (
               <div className="text-xs text-gray-500">Loading...</div>
-            ) : clientDetails.error ? (
-              <div className="text-xs text-red-500">{clientDetails.error}</div>
-            ) : (
+            ) : clientDetailsError ? (
+              <div className="text-xs text-red-500">{clientDetailsError}</div>
+            ) : clientDetails ? (
               <div className="space-y-1">
                 <div><span className="font-semibold">Name:</span> {clientDetails.name}</div>
                 <div><span className="font-semibold">Email:</span> {clientDetails.email}</div>
@@ -238,7 +267,7 @@ const LeadsBySubCategory = () => {
                 <div><span className="font-semibold">Description:</span> {clientDetails.description}</div>
                 <div><span className="font-semibold">Active:</span> {clientDetails.active ? 'Yes' : 'No'}</div>
               </div>
-            )}
+            ) : null}
           </div>
         </DialogContent>
       </Dialog>
