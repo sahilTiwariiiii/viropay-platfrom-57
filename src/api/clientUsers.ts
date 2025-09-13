@@ -13,6 +13,6 @@ export async function getClientUser(clientId: number): Promise<ClientUser> {
   return res.data;
 }
 
-export async function updateClientUser(clientId: number, data: { username: string; password: string | null }): Promise<void> {
+export async function updateClientUser(clientId: number, data: { username: string; email: string; password: string | null }): Promise<void> {
   await api.put(`/api/v1/users/client/${clientId}`, data);
 }

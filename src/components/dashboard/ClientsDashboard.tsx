@@ -47,11 +47,17 @@ import { ManageCredentialsModal } from './ManageCredentialsModal';
 type DialogMode = 'create' | 'edit' | 'view' | null;
 
 
+
 interface CredentialsData {
   username: string;
   email: string;
   password: string;
   role: string;
+  company: string;
+  phone: string;
+  address: string;
+  description: string;
+  active: boolean;
 }
 
 
@@ -382,6 +388,11 @@ export const ClientsDashboard: React.FC = () => {
                                   email: client.email || '',
                                   password: '',
                                   role: 'CLIENT',
+                                  company: client.company || '',
+                                  phone: client.phone || '',
+                                  address: client.address || '',
+                                  description: client.description || '',
+                                  active: typeof client.active === 'boolean' ? client.active : true,
                                 });
                                 setCredentialsModalOpen(true);
                               }}
