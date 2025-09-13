@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+ import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { updateUserCredentials } from '@/api/users';
+import { getClientUser, updateClientUser } from '@/api/clientUsers';
 
 interface ManageCredentialsModalProps {
   open: boolean;
@@ -27,21 +27,42 @@ export const ManageCredentialsModal: React.FC<ManageCredentialsModalProps> = ({
   const [form, setForm] = useState({
     username: initialData?.username || '',
     email: initialData?.email || '',
-    password: initialData?.password || '',
+    password: '',
     role: initialData?.role || 'CLIENT',
   });
   const [loading, setLoading] = useState(false);
+  const [fetching, setFetching] = useState(false);
   const [error, setError] = useState('');
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
+  React.useEffect(() => {
+    if (open && clientId) {
+      setFetching(true);
+      getClientUser(clientId)
+        .then(data => {
+          setForm({
+            username: data.username || '',
+            email: data.email || '',
+            password: '',
+            role: data.role || 'CLIENT',
+          });
+        })
+        .catch(() => setError('Failed to fetch client details'))
+        .finally(() => setFetching(false));
+    }
+  }, [open, clientId]);
+
   const handleSubmit = async () => {
     setLoading(true);
     setError('');
     try {
-      await updateUserCredentials({ ...form, clientId });
+      await updateClientUser(clientId, {
+        username: form.username,
+        password: form.password || null,
+      });
       onSuccess();
       onOpenChange(false);
     } catch (err: any) {
@@ -53,31 +74,42 @@ export const ManageCredentialsModal: React.FC<ManageCredentialsModalProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-lg p-8 rounded-xl">
         <DialogHeader>
-          <DialogTitle>Manage Client Credentials</DialogTitle>
+          <DialogTitle className="text-lg font-bold mb-2">Manage Client Credentials</DialogTitle>
         </DialogHeader>
-        <div className="space-y-3">
-          <label className="block text-sm font-medium">Username
-            <Input name="username" placeholder="Username" value={form.username} onChange={handleChange} />
-          </label>
-          <label className="block text-sm font-medium">Email
-            <Input name="email" placeholder="Email" value={form.email} onChange={handleChange} />
-          </label>
-          <label className="block text-sm font-medium">Password
-            <Input name="password" placeholder="Password" value={form.password} onChange={handleChange} type="password" />
-          </label>
-          <label className="block text-sm font-medium">Role
-            <Input name="role" placeholder="Role" value={form.role} onChange={handleChange} disabled />
-          </label>
-          {error && <div className="text-red-500 text-sm">{error}</div>}
-        </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>Cancel</Button>
-          <Button className="bg-saas-blue hover:bg-saas-blue/90" onClick={handleSubmit} disabled={loading}>
-            {loading ? 'Saving...' : 'Save'}
-          </Button>
-        </DialogFooter>
+        {fetching ? (
+          <div className="py-8 text-center text-gray-500">Loading client details...</div>
+        ) : (
+          <form className="space-y-6" onSubmit={e => { e.preventDefault(); handleSubmit(); }}>
+            <div className="flex flex-col gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">Username</label>
+                <Input name="username" placeholder="Username" value={form.username} onChange={handleChange} autoComplete="off" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Email</label>
+                <Input name="email" placeholder="Email" value={form.email} disabled className="bg-gray-100 cursor-not-allowed" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Password</label>
+                <Input name="password" placeholder="Password" value={form.password} onChange={handleChange} type="password" autoComplete="new-password" />
+                <span className="text-xs text-gray-400">Leave blank to keep unchanged</span>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Role</label>
+                <Input name="role" placeholder="Role" value={form.role} disabled className="bg-gray-100 cursor-not-allowed" />
+              </div>
+              {error && <div className="text-red-500 text-sm mt-2">{error}</div>}
+            </div>
+            <DialogFooter className="mt-6 flex gap-2 justify-end">
+              <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>Cancel</Button>
+              <Button className="bg-saas-blue hover:bg-saas-blue/90 min-w-[100px]" type="submit" disabled={loading}>
+                {loading ? 'Saving...' : 'Save'}
+              </Button>
+            </DialogFooter>
+          </form>
+        )}
       </DialogContent>
     </Dialog>
   );
