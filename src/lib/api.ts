@@ -49,6 +49,11 @@ const apiCall = async (endpoint: string, options: RequestInit = {}) => {
     throw new Error(`API call failed: ${response.status} ${response.statusText}`);
   }
 
+  // If DELETE returns 204 No Content, don't try to parse JSON
+  if (response.status === 204) {
+    return;
+  }
+
   return response.json();
 };
 
