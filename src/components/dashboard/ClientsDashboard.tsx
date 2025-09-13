@@ -384,8 +384,8 @@ export const ClientsDashboard: React.FC = () => {
                               onClick={() => {
                                 setCredentialsClientId(client.id);
                                 setCredentialsInitial({
-                                  username: client.name || '',
-                                  email: client.email || '',
+                                  username: client.username ?? client.name ?? '',
+                                  email: client.loginEmail ?? client.email ?? '',
                                   password: '',
                                   role: 'CLIENT',
                                   company: client.company || '',
@@ -393,6 +393,8 @@ export const ClientsDashboard: React.FC = () => {
                                   address: client.address || '',
                                   description: client.description || '',
                                   active: typeof client.active === 'boolean' ? client.active : true,
+                                  isCredentialSet: client.isCredentialSet,
+                                  loginEmail: client.loginEmail ?? null,
                                 });
                                 setCredentialsModalOpen(true);
                               }}

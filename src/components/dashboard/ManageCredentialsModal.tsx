@@ -128,9 +128,7 @@ export const ManageCredentialsModal: React.FC<ManageCredentialsModalProps> = ({
               <Button className="bg-saas-blue hover:bg-saas-blue/90 min-w-[100px]" type="submit" disabled={loading}>
                 {loading
                   ? 'Saving...'
-                  : (initialData?.isCredentialSet === true)
-                    ? 'Update'
-                    : 'Set'}
+                  : (initialData?.isCredentialSet === true ? 'Update' : 'Set')}
               </Button>
             </DialogFooter>
         </form>
