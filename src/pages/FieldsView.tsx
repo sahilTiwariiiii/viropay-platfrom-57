@@ -191,7 +191,7 @@ const FieldsView = () => {
   };
 
   return (
-  <div className="flex-1 flex flex-col overflow-hidden bg-background min-h-screen">
+  <div className="bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent shadow-lg transition-all duration-300">
       <Header
         title={`Fields for ${subcategory}`}
         subtitle={`Manage fields for ${category} / ${subcategory}`}
@@ -225,7 +225,7 @@ const FieldsView = () => {
                     <Settings className="h-7 w-7 sm:h-8 sm:w-8 text-primary" />
                   </div>
                   <div>
-                    <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent">
+                    <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">
                       Fields Configuration
                     </h1>
                     <p className="text-muted-foreground mt-1 text-xs sm:text-sm">
@@ -235,7 +235,7 @@ const FieldsView = () => {
                 </div>
                 <Button 
                   onClick={handleAddField} 
-                  className="btn-primary-glow text-primary-foreground border-0 px-4 py-2 sm:px-6 sm:py-3 text-sm sm:text-base w-full sm:w-auto"
+                  className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 btn-primary-glow text-primary-foreground border-0 px-4 py-2 sm:px-6 sm:py-3 text-sm sm:text-base w-full sm:w-auto"
                   size="lg"
                 >
                   <Plus className="mr-2 h-5 w-5" /> 
@@ -270,7 +270,7 @@ const FieldsView = () => {
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">Total Fields</p>
+                      <p className=" text-sm font-medium text-muted-foreground ">Total Fields</p>
                       <p className="text-2xl font-bold text-primary">{fields.length}</p>
                     </div>
                     <div className="bg-primary/10 p-3 rounded-xl">
@@ -676,7 +676,7 @@ const FieldsView = () => {
                   </DialogClose>
                   <Button 
                     type="submit" 
-                    className="btn-primary-glow text-primary-foreground px-6 py-2"
+                    className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 btn-primary-glow text-primary-foreground px-6 py-2"
                   >
                     {isEdit ? 'Update' : 'Create'} Field
                   </Button>

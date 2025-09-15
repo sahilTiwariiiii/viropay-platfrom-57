@@ -82,8 +82,8 @@ const ViewSubCategories = () => {
               <h2 className="text-lg sm:text-xl font-semibold">
                 Subcategories of {categoryName || ''}
               </h2>
-              <Button onClick={handleAddSubCategory} className="bg-saas-blue hover:bg-saas-blue/90 w-full sm:w-auto">
-                <Plus className="mr-2 h-4 w-4" /> Add Subcategory
+              <Button onClick={handleAddSubCategory} className="bg-saas-blue hover:bg-saas-blue/90 w-full sm:w-auto bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
+                <Plus className="mr-2 h-4 w-4 " /> Add Subcategory
               </Button>
             </div>
             <div className="overflow-x-auto w-full">
