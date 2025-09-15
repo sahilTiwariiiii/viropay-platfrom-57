@@ -125,7 +125,7 @@ export const ManageCredentialsModal: React.FC<ManageCredentialsModalProps> = ({
           </div>
             <DialogFooter className="mt-6 flex gap-2 justify-end">
               <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>Cancel</Button>
-              <Button className="bg-saas-blue hover:bg-saas-blue/90 min-w-[100px]" type="submit" disabled={loading}>
+              <Button className="bg-saas-blue hover:bg-saas-blue/90 min-w-[100px] bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105" type="submit" disabled={loading}>
                 {loading
                   ? 'Saving...'
                   : (initialData?.isCredentialSet === true ? 'Update' : 'Set')}

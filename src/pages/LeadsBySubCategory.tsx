@@ -100,14 +100,14 @@ const LeadsBySubCategory = () => {
           </div>
           <div className="w-full sm:w-auto flex justify-end sm:justify-start gap-2">
             <Button
-              className="bg-saas-blue hover:bg-saas-blue/90"
+              className="bg-saas-blue hover:bg-saas-blue/90 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
               onClick={() => setTransferDialogOpen(true)}
               disabled={selectedLeads.length === 0}
             >
               Transfer to Clients
             </Button>
             <Button
-              className="bg-saas-blue hover:bg-saas-blue/90"
+              className="bg-saas-blue hover:bg-saas-blue/90 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
               onClick={async () => {
                 try {
                   const params = new URLSearchParams({

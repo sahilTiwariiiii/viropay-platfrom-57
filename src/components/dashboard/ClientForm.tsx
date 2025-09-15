@@ -223,12 +223,12 @@ export const ClientForm: React.FC<ClientFormProps> = ({
             </Button>
             <Button
               type="submit"
-              className="admin-button-primary"
+              className="admin-button-primary bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
               disabled={isLoading}
             >
               {isLoading ? (
                 <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2"></div>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2 "></div>
                   {client ? 'Updating...' : 'Creating...'}
                 </>
               ) : (

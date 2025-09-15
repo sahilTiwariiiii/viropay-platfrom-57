@@ -107,15 +107,15 @@ export const ClientDetails: React.FC<ClientDetailsProps> = ({
         <Button
           variant="outline"
           onClick={onEdit}
-          className="hover:bg-primary hover:text-primary-foreground"
+          className="hover:bg-primary hover:text-primary-foreground bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
         >
-          <Edit className="mr-2 h-4 w-4" />
+          <Edit className="mr-2 h-4 w-4 " />
           Edit Client
         </Button>
         <Button
           variant="destructive"
           onClick={onDelete}
-          className="hover:bg-destructive/90"
+          className="hover:bg-destructive/90 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
         >
           <Trash2 className="mr-2 h-4 w-4" />
           Delete Client

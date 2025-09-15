@@ -248,7 +248,7 @@ export const ClientsDashboard: React.FC = () => {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <Button 
             onClick={() => setDialogMode('create')}
-            className="admin-button-primary w-fit"
+            className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 w-fit"
           >
             <Plus className="mr-2 h-4 w-4" />
             Add New Client
@@ -322,7 +322,7 @@ export const ClientsDashboard: React.FC = () => {
                   {searchTerm ? 'Try adjusting your search terms' : 'Get started by adding your first client'}
                 </p>
                 {!searchTerm && (
-                  <Button onClick={() => setDialogMode('create')} className="admin-button-primary">
+                  <Button onClick={() => setDialogMode('create')} className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
                     <Plus className="mr-2 h-4 w-4" />
                     Add Your First Client
                   </Button>
@@ -353,7 +353,7 @@ export const ClientsDashboard: React.FC = () => {
                           <button
                             type="button"
                             title="View transferred leads"
-                            className="inline-flex items-center hover:text-blue-600 focus:outline-none"
+                            className="inline-flex items-center hover:bg-gradient-to-r hover:from-blue-500 hover:to-purple-600 hover:text-white focus:outline-none transition-colors"
                             onClick={() => navigate(`/client-lead-transfers/${client.id}`)}
                           >
                             <ExternalLink className="h-4 w-4 ml-1" />
@@ -373,7 +373,7 @@ export const ClientsDashboard: React.FC = () => {
                               variant="ghost"
                               size="sm"
                               onClick={() => handleViewClient(client)}
-                              className="hover:bg-primary hover:text-primary-foreground"
+                              className="hover:bg-gradient-to-r hover:from-blue-500 hover:to-purple-600 hover:text-white transition-colors"
                             >
                               <Eye className="h-4 w-4" />
                             </Button>
@@ -398,17 +398,17 @@ export const ClientsDashboard: React.FC = () => {
                                 });
                                 setCredentialsModalOpen(true);
                               }}
-                              className="hover:bg-primary hover:text-primary-foreground"
+                              className="hover:bg-gradient-to-r hover:from-blue-500 hover:to-purple-600 hover:text-white transition-colors"
                             >
                               <KeyRound className="h-4 w-4" />
                             </Button>
-      <ManageCredentialsModal
-        open={credentialsModalOpen}
-        onOpenChange={setCredentialsModalOpen}
-        clientId={credentialsClientId ?? 0}
-        initialData={credentialsInitial}
-        onSuccess={fetchClients}
-      />
+                            <ManageCredentialsModal
+                              open={credentialsModalOpen}
+                              onOpenChange={setCredentialsModalOpen}
+                              clientId={credentialsClientId ?? 0}
+                              initialData={credentialsInitial}
+                              onSuccess={fetchClients}
+                            />
                             <Button
                               variant="ghost"
                               size="sm"
@@ -416,7 +416,7 @@ export const ClientsDashboard: React.FC = () => {
                                 setSelectedClient(client);
                                 setDialogMode('edit');
                               }}
-                              className="hover:bg-primary hover:text-primary-foreground"
+                              className="hover:bg-gradient-to-r hover:from-blue-500 hover:to-purple-600 hover:text-white transition-colors"
                             >
                               <Edit className="h-4 w-4" />
                             </Button>
@@ -424,7 +424,7 @@ export const ClientsDashboard: React.FC = () => {
                               variant="ghost"
                               size="sm"
                               onClick={() => openDeleteDialog(client)}
-                              className="hover:bg-destructive hover:text-destructive-foreground"
+                              className="hover:bg-gradient-to-r hover:from-red-500 hover:to-purple-600 hover:text-white transition-colors"
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
