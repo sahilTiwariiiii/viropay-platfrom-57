@@ -295,7 +295,7 @@ const ViewSubCategories = () => {
                   setLoading(false);
                 }
               }}
-              className="bg-saas-blue hover:bg-saas-blue/90"
+              className="bg-saas-blue hover:bg-saas-blue/90 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
             >
               Save
             </Button>
