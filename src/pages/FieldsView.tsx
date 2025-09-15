@@ -375,8 +375,8 @@ const FieldsView = () => {
                         </TableCell>
                         <TableCell>
                           {field.required ? (
-                            <Badge className="badge-success text-xs px-3 py-1">
-                              <CheckCircle className="w-3 h-3 mr-1" />
+                            <Badge className="text-xs px-3 py-1 font-semibold border-0 text-white" style={{background: 'linear-gradient(to right, #3b82f6, #8b5cf6)'}}>
+                              <CheckCircle className="w-3 h-3 mr-1 text-white" />
                               Required
                             </Badge>
                           ) : (
