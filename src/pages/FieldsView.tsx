@@ -7,6 +7,7 @@ import Header from '@/components/layout/Header';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
 import { Edit, Trash2, Plus, Settings, Tag, CheckCircle, Clock, Image as ImageIcon } from 'lucide-react';
 import { getFieldsBySubcategory, addField, deleteField, updateField } from '@/api/fields';
+import { uploadFile } from '@/api/uploadFile';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { Form, FormItem, FormLabel, FormControl, FormDescription, FormMessage, FormField } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
@@ -53,6 +54,7 @@ const FieldsView = () => {
   // Enhanced option state to handle objects with name and image
   const [optionItems, setOptionItems] = useState<Array<{name: string, image: string}>>([]);
   const [currentOption, setCurrentOption] = useState({name: '', image: ''});
+  const [uploading, setUploading] = useState(false);
 
   // Fetch fields from API
   const fetchFields = async () => {
@@ -152,12 +154,26 @@ const FieldsView = () => {
         name: currentOption.name.trim(),
         image: currentOption.image.trim() || ''
       };
-      
       // Check if option name already exists
       if (!optionItems.some(item => item.name === newOption.name)) {
         setOptionItems([...optionItems, newOption]);
         setCurrentOption({name: '', image: ''});
       }
+    }
+  };
+
+  // Handle image file upload for option
+  const handleOptionImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const url = await uploadFile(file);
+      setCurrentOption((prev) => ({ ...prev, image: typeof url === 'string' ? url : url.url }));
+    } catch (err) {
+      alert('Image upload failed');
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -656,14 +672,24 @@ const FieldsView = () => {
                               </div>
                               <div>
                                 <label className="text-sm font-medium text-foreground mb-1 block">
-                                  Image URL <span className="text-muted-foreground">(optional)</span>
+                                  Option Image <span className="text-muted-foreground">(optional)</span>
                                 </label>
-                                <Input
-                                  placeholder="https://example.com/image.png"
-                                  value={currentOption.image}
-                                  onChange={(e) => setCurrentOption({...currentOption, image: e.target.value})}
-                                  className="rounded-lg border-border/50 focus:border-primary focus:ring-2 focus:ring-primary/20"
-                                />
+                                <div className="flex items-center gap-2">
+                                  <Input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={handleOptionImageUpload}
+                                    className="rounded-lg border-border/50 focus:border-primary focus:ring-2 focus:ring-primary/20"
+                                    disabled={uploading}
+                                  />
+                                  {uploading && <span className="text-xs text-muted-foreground">Uploading...</span>}
+                                </div>
+                                {currentOption.image && (
+                                  <div className="mt-2 flex items-center gap-2">
+                                    <img src={currentOption.image} alt="Option" className="w-10 h-10 rounded object-cover border" />
+                                    <span className="text-xs text-muted-foreground break-all">{currentOption.image}</span>
+                                  </div>
+                                )}
                               </div>
                               <Button
                                 type="button"
