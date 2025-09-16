@@ -40,6 +40,101 @@ const LeadsBySubCategory = () => {
   const [clientDetailsDialogOpen, setClientDetailsDialogOpen] = useState(false);
   const [clientDetails, setClientDetails] = useState<Client | null>(null);
   const [clientDetailsError, setClientDetailsError] = useState<string | null>(null);
+
+  // Helper function to render field values with support for objects and arrays
+  const renderFieldValue = (key: string, value: any) => {
+    // Handle arrays (multiple choice fields)
+    if (Array.isArray(value)) {
+      return (
+        <div className="space-y-2">
+          {value.map((item, index) => (
+            <div key={index} className="flex items-center gap-2 flex-wrap">
+              {typeof item === 'object' && item !== null ? (
+                <>
+                  <span className="inline-block px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
+                    {item.name || String(item)}
+                  </span>
+                  {item.image && (
+                    <img 
+                      src={item.image} 
+                      alt={item.name || 'Option image'} 
+                      className="w-12 h-12 object-cover rounded border"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).style.display = 'none';
+                      }}
+                    />
+                  )}
+                </>
+              ) : (
+                <span className="inline-block px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-xs font-medium">
+                  {String(item)}
+                </span>
+              )}
+            </div>
+          ))}
+        </div>
+      );
+    }
+    
+    // Handle objects (single choice with image)
+    if (typeof value === 'object' && value !== null) {
+      return (
+        <div className="flex items-center gap-2">
+          <span className="inline-block px-2 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">
+            {value.name || String(value)}
+          </span>
+          {value.image && (
+            <img 
+              src={value.image} 
+              alt={value.name || 'Option image'} 
+              className="w-12 h-12 object-cover rounded border"
+              onError={(e) => {
+                (e.target as HTMLImageElement).style.display = 'none';
+              }}
+            />
+          )}
+        </div>
+      );
+    }
+
+    // Handle URLs (images and links)
+    if (typeof value === 'string' && value.match(/^https?:\/\//)) {
+      if (value.endsWith('.png') || value.endsWith('.jpg') || value.endsWith('.jpeg') || value.endsWith('.webp')) {
+        return (
+          <img 
+            src={value} 
+            alt={key} 
+            className="max-h-32 rounded border mb-1" 
+            style={{maxWidth:'100%'}} 
+          />
+        );
+      } else {
+        return (
+          <a 
+            href={value} 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            className="text-blue-600 underline break-all"
+          >
+            {value}
+          </a>
+        );
+      }
+    }
+
+    // Handle booleans
+    if (typeof value === 'boolean') {
+      return (
+        <span className={value ? 'text-green-600 font-bold' : 'text-red-500 font-bold'}>
+          {value ? 'Yes' : 'No'}
+        </span>
+      );
+    }
+
+    // Handle regular strings and other values
+    return <span>{String(value)}</span>;
+  };
+
   // Fetch clients when transfer dialog opens
   useEffect(() => {
     if (transferDialogOpen) {
@@ -335,75 +430,81 @@ const LeadsBySubCategory = () => {
               ) : error ? (
                 <div className="text-center py-10 text-red-500">{error}</div>
               ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-gray-50 hover:bg-gray-50">
-                      <TableHead>
-                        <Checkbox checked={selectedLeads.length === leads.length && leads.length > 0} onCheckedChange={handleSelectAll} className="h-4 w-4 rounded-sm" />
-                      </TableHead>
-                      <TableHead>Lead #</TableHead>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {leads.length > 0 ? (
-                      leads.map((lead: any, idx: number) => (
-                        <TableRow key={lead.id} className="hover:bg-gray-50">
-                          <TableCell>
-                            <Checkbox checked={selectedLeads.includes(lead.id)} onCheckedChange={() => handleSelectLead(lead.id)} className="h-4 w-4 rounded-sm" />
-                          </TableCell>
-                          <TableCell>Lead {idx + 1 + page * PAGE_SIZE}</TableCell>
-                          <TableCell>
-                            {lead.createdAt ? new Date(lead.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : '-'}
-                          </TableCell>
-                          <TableCell className="flex gap-2">
-                            <Button size="sm" variant="outline" onClick={() => handleViewDetails(lead.id)}>
-                              View Details
-                            </Button>
-                            <Button size="sm" variant="destructive" onClick={() => { setLeadToDelete(lead); setDeleteDialogOpen(true); }}>
-                              Delete
-                            </Button>
-                          </TableCell>
-      {/* Delete Lead Confirmation Dialog */}
-      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Delete Lead</DialogTitle>
-          </DialogHeader>
-          <div>Are you sure you want to delete this lead?</div>
-          <div className="flex justify-end gap-2 mt-6">
-            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
-            <Button
-              variant="destructive"
-              onClick={async () => {
-                if (!leadToDelete) return;
-                try {
-                  await deleteLead(leadToDelete.id);
-                  setLeads(leads.filter(l => l.id !== leadToDelete.id));
-                  setDeleteDialogOpen(false);
-                  setLeadToDelete(null);
-                } catch (err) {
-                  alert('Failed to delete lead');
-                }
-              }}
-            >
-              Yes, Delete
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-                        </TableRow>
-                      ))
-                    ) : (
-                      <TableRow>
-                        <TableCell colSpan={3} className="text-center py-10">
-                          No leads found for this subcategory.
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
+             <Table>
+  <TableHeader>
+    <TableRow className="bg-gray-50 hover:bg-gray-50">
+      <TableHead className="w-10 text-center align-middle">
+        <Checkbox
+          checked={selectedLeads.length === leads.length && leads.length > 0}
+          onCheckedChange={handleSelectAll}
+          className="h-4 w-4 rounded-sm"
+        />
+      </TableHead>
+      <TableHead className="text-center align-middle">Lead #</TableHead>
+      <TableHead className="text-center align-middle">Date</TableHead>
+      <TableHead className="text-center align-middle">Actions</TableHead>
+    </TableRow>
+  </TableHeader>
+
+  <TableBody>
+    {leads.length > 0 ? (
+      leads.map((lead: any, idx: number) => (
+        <TableRow key={lead.id} className="hover:bg-gray-50">
+          <TableCell className="text-center align-middle">
+            <Checkbox
+              checked={selectedLeads.includes(lead.id)}
+              onCheckedChange={() => handleSelectLead(lead.id)}
+              className="h-4 w-4 rounded-sm"
+            />
+          </TableCell>
+
+          <TableCell className="text-center align-middle">
+            Lead {idx + 1 + page * PAGE_SIZE}
+          </TableCell>
+
+          <TableCell className="text-center align-middle">
+            {lead.createdAt
+              ? new Date(lead.createdAt).toLocaleDateString('en-US', {
+                  year: 'numeric',
+                  month: 'short',
+                  day: 'numeric',
+                })
+              : '-'}
+          </TableCell>
+
+          <TableCell className="text-center align-middle">
+            <div className="flex justify-center gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => handleViewDetails(lead.id)}
+              >
+                View Details
+              </Button>
+              <Button
+                size="sm"
+                variant="destructive"
+                onClick={() => {
+                  setLeadToDelete(lead);
+                  setDeleteDialogOpen(true);
+                }}
+              >
+                Delete
+              </Button>
+            </div>
+          </TableCell>
+        </TableRow>
+      ))
+    ) : (
+      <TableRow>
+        <TableCell colSpan={4} className="text-center py-10">
+          No leads found for this subcategory.
+        </TableCell>
+      </TableRow>
+    )}
+  </TableBody>
+</Table>
+
               )}
             </div>
             {/* Pager */}
@@ -428,14 +529,13 @@ const LeadsBySubCategory = () => {
             <div className="flex flex-col max-h-[90vh] sm:max-h-[80vh] w-full">
               <div className="relative px-6 pt-6 pb-2">
                 <DialogTitle>Lead Details</DialogTitle>
-                {/* Only one close button, absolutely positioned */}
                 <DialogClose asChild>
                   <button
                     className="absolute right-4 top-4 text-gray-400 hover:text-gray-600 z-10"
                     aria-label="Close"
                     type="button"
                   >
-                    {/* <span aria-hidden="true">&times;</span> */}
+                    {/* Close button content can be added here */}
                   </button>
                 </DialogClose>
               </div>
@@ -469,22 +569,19 @@ const LeadsBySubCategory = () => {
                     <div className="space-y-3">
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                          <div className="font-semibold text-xs text-muted-foreground mb-1">Lead ID</div>
+                          <div className="font-semibold text-sm text-muted-foreground mb-1">Lead ID</div>
                           <div className="text-base font-bold text-primary">{leadDetails.id}</div>
                         </div>
                         <div>
-                          <div className="font-semibold text-xs text-muted-foreground mb-1">Subcategory</div>
+                          <div className="font-semibold text-sm text-muted-foreground mb-1">Subcategory</div>
                           <div className="text-base font-bold text-primary">{leadDetails.subcategoryName} (ID: {leadDetails.subcategoryId})</div>
                         </div>
                         <div>
-                          <div className="font-semibold text-xs text-muted-foreground mb-1">Status</div>
+                          <div className="font-semibold text-sm text-muted-foreground mb-1">Status</div>
                           <div className="text-base font-semibold text-blue-700">{leadDetails.status}</div>
                         </div>
-                        {/* Source field removed as per user request */}
-
-
                         <div>
-                          <div className="font-semibold text-xs text-muted-foreground mb-1">Created At</div>
+                          <div className="font-semibold text-sm text-muted-foreground mb-1">Created At</div>
                           <div className="text-sm text-foreground">
                             {leadDetails.createdAt ?
                               new Date(leadDetails.createdAt).toLocaleString('en-US', {
@@ -499,7 +596,7 @@ const LeadsBySubCategory = () => {
                           </div>
                         </div>
                         <div>
-                          <div className="font-semibold text-xs text-muted-foreground mb-1">Updated At</div>
+                          <div className="font-semibold text-sm text-muted-foreground mb-1">Updated At</div>
                           <div className="text-sm text-foreground">
                             {leadDetails.updateAt ?
                               new Date(leadDetails.updateAt).toLocaleString('en-US', {
@@ -514,13 +611,13 @@ const LeadsBySubCategory = () => {
                           </div>
                         </div>
                         <div className="sm:col-span-2">
-                          <div className="font-semibold text-xs text-muted-foreground mb-1">Notes</div>
+                          <div className="font-semibold text-sm text-muted-foreground mb-1">Notes</div>
                           <div className="text-sm text-foreground whitespace-pre-line">{leadDetails.notes || '-'}</div>
                         </div>
                       </div>
                       {leadDetails.dataJson && (
                         <div className="mt-4">
-                          <div className="font-semibold text-xs text-muted-foreground mb-2">Lead Data</div>
+                          <div className="font-semibold text-sm text-muted-foreground mb-2">Lead Data</div>
                           <div className="bg-gray-50 border rounded p-3 overflow-x-auto">
                             {(() => {
                               let data;
@@ -531,7 +628,7 @@ const LeadsBySubCategory = () => {
                               }
                               if (typeof data === 'object' && data !== null) {
                                 return (
-                                  <table className="w-full text-xs">
+                                  <table className="w-full text-sm">
                                     <tbody>
                                       {Object.entries(data)
                                         .filter(([k, v]) => k.toLowerCase() !== 'user agent')
@@ -539,15 +636,7 @@ const LeadsBySubCategory = () => {
                                           <tr key={k} className="border-b last:border-b-0">
                                             <td className="font-semibold pr-2 py-1 align-top text-muted-foreground whitespace-nowrap">{k}</td>
                                             <td className="py-1">
-                                              {typeof v === 'string' && v.match(/^https?:\/\//) && (v.endsWith('.png') || v.endsWith('.jpg') || v.endsWith('.jpeg') || v.endsWith('.webp')) ? (
-                                                <img src={v} alt={k} className="max-h-32 rounded border mb-1" style={{maxWidth:'100%'}} />
-                                              ) : typeof v === 'string' && v.startsWith('http') ? (
-                                                <a href={v} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline break-all">{v}</a>
-                                              ) : typeof v === 'boolean' ? (
-                                                <span className={v ? 'text-green-600 font-bold' : 'text-red-500 font-bold'}>{v ? 'Yes' : 'No'}</span>
-                                              ) : (
-                                                <span>{String(v)}</span>
-                                              )}
+                                              {renderFieldValue(k, v)}
                                             </td>
                                           </tr>
                                         ))}
@@ -569,6 +658,35 @@ const LeadsBySubCategory = () => {
           </DialogContent>
         </Dialog>
       </main>
+
+      {/* Delete Lead Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Delete Lead</DialogTitle>
+          </DialogHeader>
+          <div>Are you sure you want to delete this lead?</div>
+          <div className="flex justify-end gap-2 mt-6">
+            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
+            <Button
+              variant="destructive"
+              onClick={async () => {
+                if (!leadToDelete) return;
+                try {
+                  await deleteLead(leadToDelete.id);
+                  setLeads(leads.filter(l => l.id !== leadToDelete.id));
+                  setDeleteDialogOpen(false);
+                  setLeadToDelete(null);
+                } catch (err) {
+                  alert('Failed to delete lead');
+                }
+              }}
+            >
+              Yes, Delete
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
       {/* Shimmer effect styles */}
       <style>{`
         .shimmer {

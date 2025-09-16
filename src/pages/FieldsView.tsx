@@ -5,7 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import Header from '@/components/layout/Header';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
-import { Edit, Trash2, Plus, Settings, Tag, CheckCircle, Clock } from 'lucide-react';
+import { Edit, Trash2, Plus, Settings, Tag, CheckCircle, Clock, Image as ImageIcon } from 'lucide-react';
 import { getFieldsBySubcategory, addField, deleteField, updateField } from '@/api/fields';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { Form, FormItem, FormLabel, FormControl, FormDescription, FormMessage, FormField } from '@/components/ui/form';
@@ -50,9 +50,9 @@ const FieldsView = () => {
     },
   });
 
-  // Tag input state for options
-  const [optionTags, setOptionTags] = useState<string[]>([]);
-  const optionInputRef = useRef<HTMLInputElement>(null);
+  // Enhanced option state to handle objects with name and image
+  const [optionItems, setOptionItems] = useState<Array<{name: string, image: string}>>([]);
+  const [currentOption, setCurrentOption] = useState({name: '', image: ''});
 
   // Fetch fields from API
   const fetchFields = async () => {
@@ -60,7 +60,6 @@ const FieldsView = () => {
     setLoading(true);
     try {
       const data = await getFieldsBySubcategory(subcategoryId);
-      // If API returns an array directly, use it. If wrapped in {fields: [...]}, use that.
       setFields(Array.isArray(data) ? data : (data as any)?.fields || []);
     } catch (err) {
       setFields([]);
@@ -71,30 +70,38 @@ const FieldsView = () => {
 
   useEffect(() => {
     fetchFields();
-    // eslint-disable-next-line
   }, [subcategoryId]);
 
   // Clear options field if type is not radio/dropdown
   useEffect(() => {
     const subscription = form.watch((value, { name }) => {
       if (name === 'type' && value.type !== 'radio' && value.type !== 'checkbox') {
-        setOptionTags([]);
+        setOptionItems([]);
         form.setValue('options', '');
       }
     });
     return () => subscription.unsubscribe();
   }, [form]);
 
-  // Keep form.options in sync with optionTags
+  // Keep form.options in sync with optionItems
   useEffect(() => {
     if (form.watch('type') === 'radio' || form.watch('type') === 'checkbox') {
-      form.setValue('options', optionTags.join(','));
+      form.setValue('options', JSON.stringify(optionItems));
     }
-    // eslint-disable-next-line
-  }, [optionTags]);
+  }, [optionItems]);
 
   const handleAddField = () => {
     setIsEdit(false);
+    setOptionItems([]);
+    setCurrentOption({name: '', image: ''});
+    form.reset({
+      name: '',
+      type: 'text',
+      required: false,
+      options: '',
+      description: '',
+      displayOrder: 1,
+    });
     setOpen(true);
   };
 
@@ -103,34 +110,83 @@ const FieldsView = () => {
     setEditingFieldId(id);
     try {
       const data = await getFieldById(id);
-      let optionsArr: string[] = [];
-      if (typeof data.options === 'string') {
-        try { optionsArr = JSON.parse(data.options); } catch { optionsArr = []; }
+      let parsedOptions: Array<{name: string, image: string}> = [];
+      
+      if (data.options) {
+        try {
+          const parsed = JSON.parse(data.options);
+          if (Array.isArray(parsed)) {
+            // Check if it's the new format (array of objects)
+            if (parsed.length > 0 && typeof parsed[0] === 'object' && parsed[0].name !== undefined) {
+              parsedOptions = parsed;
+            } else {
+              // Convert old format (array of strings) to new format
+              parsedOptions = parsed.map((opt: string) => ({name: opt, image: ''}));
+            }
+          }
+        } catch {
+          parsedOptions = [];
+        }
       }
+
       form.reset({
         name: data.name || '',
         type: (data.type || '').toLowerCase() || 'text',
         required: !!data.required,
-        options: optionsArr.join(','),
+        options: JSON.stringify(parsedOptions),
         description: data.description || '',
         displayOrder: data.displayOrder || 1,
       });
-      setOptionTags(optionsArr);
+      
+      setOptionItems(parsedOptions);
+      setCurrentOption({name: '', image: ''});
       setOpen(true);
     } catch (err) {
-      // handle error (show toast, etc.)
+      console.error('Error loading field:', err);
     }
+  };
+
+  const handleAddOption = () => {
+    if (currentOption.name.trim()) {
+      const newOption = {
+        name: currentOption.name.trim(),
+        image: currentOption.image.trim() || ''
+      };
+      
+      // Check if option name already exists
+      if (!optionItems.some(item => item.name === newOption.name)) {
+        setOptionItems([...optionItems, newOption]);
+        setCurrentOption({name: '', image: ''});
+      }
+    }
+  };
+
+  const handleRemoveOption = (index: number) => {
+    setOptionItems(optionItems.filter((_, i) => i !== index));
   };
 
   const onSubmit = async (data: any) => {
     if (!subcategoryId) return;
+    
     let typeEnum = (data.type || '').toUpperCase();
     if (typeEnum === 'IMAGE') typeEnum = 'FILE';
     if (typeEnum === 'CHECKBOX') typeEnum = 'MULTIPLE_CHOICE';
+    
     let options: string | null = null;
-    if ((typeEnum === 'RADIO' || typeEnum === 'DROPDOWN' || typeEnum === 'MULTIPLE_CHOICE')) {
-      options = JSON.stringify(optionTags.filter(Boolean));
-    }
+ if (typeEnum === 'RADIO' || typeEnum === 'DROPDOWN' || typeEnum === 'MULTIPLE_CHOICE') {
+  // Only include options with non-empty name, and always include image property
+  options = JSON.stringify(
+    optionItems
+      .filter(item => item.name.trim())
+      .map(item => ({
+        name: item.name.trim(),
+        image: item.image ? item.image.trim() : ''
+      }))
+  );
+}
+    // console.log('Submitting field with options:', options);
+// return
+
     let payload = {
       name: data.name,
       type: typeEnum,
@@ -142,6 +198,7 @@ const FieldsView = () => {
       active: true,
       validationRules: '{}',
     };
+    
     try {
       if (isEdit && editingFieldId) {
         await updateField(editingFieldId, payload);
@@ -150,12 +207,13 @@ const FieldsView = () => {
       }
       setOpen(false);
       form.reset();
-      setOptionTags([]);
+      setOptionItems([]);
+      setCurrentOption({name: '', image: ''});
       fetchFields();
       setEditingFieldId(null);
       setIsEdit(false);
     } catch (err) {
-      // handle error (show toast, etc.)
+      console.error('Error saving field:', err);
     }
   };
 
@@ -166,7 +224,6 @@ const FieldsView = () => {
 
   const handleDeleteField = async (id: string) => {
     setDeleteTargetId(id);
-    // Find the field name for dialog display
     const field = fields.find(f => f.id === id);
     setDeleteTargetName(field ? field.label || field.name || '' : '');
     setDeleteDialogOpen(true);
@@ -181,7 +238,7 @@ const FieldsView = () => {
       setDeleteTargetId(null);
       setDeleteTargetName(null);
     } catch (err) {
-      // handle error (show toast, etc.)
+      console.error('Error deleting field:', err);
     }
   };
 
@@ -190,8 +247,46 @@ const FieldsView = () => {
     return fieldType?.icon || '📝';
   };
 
+  const renderOptionsDisplay = (field: any) => {
+    let opts = field.options;
+    if (typeof opts === 'string') {
+      try { 
+        opts = JSON.parse(opts); 
+      } catch { 
+        opts = []; 
+      }
+    }
+    
+    if (Array.isArray(opts) && opts.length > 0) {
+      // Check if it's the new format (objects) or old format (strings)
+      const isNewFormat = opts.length > 0 && typeof opts[0] === 'object' && opts[0].name !== undefined;
+      
+      return (
+        <div className="flex flex-wrap gap-1 max-w-[150px] sm:max-w-xs">
+          {opts.slice(0, 1  ).map((opt: any, idx: number) => (
+            <div key={idx} className="flex items-center">
+              <Badge variant="outline" className="text-xs bg-accent/50 text-accent-foreground border-accent flex items-center gap-1">
+                {isNewFormat ? opt.name : opt}
+                {isNewFormat && opt.image && (
+                  <ImageIcon className="w-3 h-3 text-muted-foreground" />
+                )}
+              </Badge>
+            </div>
+          ))}
+          {opts.length > 1 && (
+            <Badge variant="outline" className="text-xs bg-muted/50 text-muted-foreground">
+              +{opts.length - 1} more
+            </Badge>
+          )}
+        </div>
+      );
+    }
+    
+    return <span className="text-xs text-muted-foreground">No options</span>;
+  };
+
   return (
-  <div className="bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent shadow-lg transition-all duration-300">
+    <div className="bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent shadow-lg transition-all duration-300">
       <Header
         title={`Fields for ${subcategory}`}
         subtitle={`Manage fields for ${category} / ${subcategory}`}
@@ -199,7 +294,7 @@ const FieldsView = () => {
         onBackClick={() => navigate(-1)}
       />
       
-  <main className="flex-1 overflow-y-auto p-2 sm:p-4 md:p-6 animate-fade-in">
+      <main className="flex-1 overflow-y-auto p-2 sm:p-4 md:p-6 animate-fade-in">
         {/* Hero Section */}
         <div className="max-w-7xl mx-auto mb-8 px-1 sm:px-2 md:px-4">
           {loading ? (
@@ -247,11 +342,11 @@ const FieldsView = () => {
         </div>
 
         {/* Stats Cards */}
-        <div className="max-w-7xl mx-auto mb-8 grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 md:gap-6 px-1 sm:px-2 md:px-4">
+        <div className="max-w-7xl mx-auto mb-8 grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 md:gap-6 px-1 sm:px-2 ">
           {loading ? (
             <>
               {[...Array(3)].map((_, i) => (
-                <Card className="card-gradient hover-lift" key={i}>
+                <Card className="card-gradient hover-lift " key={i}>
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between">
                       <div>
@@ -266,9 +361,9 @@ const FieldsView = () => {
             </>
           ) : (
             <>
-              <Card className="card-gradient hover-lift">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
+              <Card className="card-gradient  hover-lift">
+                <CardContent className="p-4 ">
+                  <div className="flex items-center  justify-between">
                     <div>
                       <p className=" text-sm font-medium text-muted-foreground ">Total Fields</p>
                       <p className="text-2xl font-bold text-primary">{fields.length}</p>
@@ -314,7 +409,7 @@ const FieldsView = () => {
         </div>
 
         {/* Main Table */}
-  <Card className="max-w-7xl mx-auto card-gradient animate-slide-up px-1 sm:px-2 md:px-4">
+        <Card className="max-w-7xl mx-auto card-gradient animate-slide-up px-1 sm:px-2 md:px-4">
           <CardContent className="p-0">
             <div className="p-3 sm:p-6 border-b border-border/50">
               <h2 className="text-xl font-semibold flex items-center">
@@ -361,7 +456,7 @@ const FieldsView = () => {
                             <div>
                               <span className="font-medium text-foreground break-all">{field.name}</span>
                               {field.description && (
-                                <p className="text-xs text-muted-foreground mt-1 max-w-[120px] sm:max-w-xs truncate">
+                                <p className="text-xs text-muted-foreground mt-1 max-w-[120px] sm:max-w-[200px] truncate">
                                   {field.description}
                                 </p>
                               )}
@@ -386,28 +481,7 @@ const FieldsView = () => {
                           )}
                         </TableCell>
                         <TableCell>
-                          {(() => {
-                            let opts = field.options;
-                            if (typeof opts === 'string') {
-                              try { opts = JSON.parse(opts); } catch { opts = []; }
-                            }
-                            return Array.isArray(opts) && opts.length > 0 ? (
-                              <div className="flex flex-wrap gap-1 max-w-[100px] sm:max-w-xs">
-                                {opts.slice(0, 2).map((opt: string, idx: number) => (
-                                  <Badge key={idx} variant="outline" className="text-xs bg-accent/50 text-accent-foreground border-accent">
-                                    {opt}
-                                  </Badge>
-                                ))}
-                                {opts.length > 2 && (
-                                  <Badge variant="outline" className="text-xs bg-muted/50 text-muted-foreground">
-                                    +{opts.length - 2} more
-                                  </Badge>
-                                )}
-                              </div>
-                            ) : (
-                              <span className="text-xs text-muted-foreground">No options</span>
-                            );
-                          })()}
+                          {renderOptionsDisplay(field)}
                         </TableCell>
                         <TableCell>
                           <div className="flex flex-col sm:flex-row gap-2 justify-center">
@@ -429,27 +503,6 @@ const FieldsView = () => {
                               <Trash2 className="h-4 w-4 mr-1" /> 
                               Delete
                             </Button>
-      {/* Delete Confirmation Dialog */}
-      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Delete Field</DialogTitle>
-          </DialogHeader>
-          <div className="py-4">Are you sure you want to delete <span className="font-semibold">{deleteTargetName}</span>?</div>
-          <DialogFooter>
-            <Button
-              variant="destructive"
-              onClick={confirmDeleteField}
-              className="bg-red-600 hover:bg-red-700"
-            >
-              Yes, Delete
-            </Button>
-            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
-              Cancel
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
                           </div>
                         </TableCell>
                       </TableRow>
@@ -472,21 +525,22 @@ const FieldsView = () => {
                 </TableBody>
               </Table>
             </div>
-      {/* Shimmer effect styles */}
-      <style>{`
-        .shimmer {
-          background: linear-gradient(90deg, #f3f3f3 25%, #e0e0e0 50%, #f3f3f3 75%);
-          background-size: 200% 100%;
-          animation: shimmer 1.2s infinite linear;
-        }
-        @keyframes shimmer {
-          0% { background-position: -200% 0; }
-          100% { background-position: 200% 0; }
-        }
-        @media (max-width: 640px) {
-          .card-gradient, .card-gradient > * { border-radius: 1rem !important; }
-        }
-      `}</style>
+            
+            {/* Shimmer effect styles */}
+            <style>{`
+              .shimmer {
+                background: linear-gradient(90deg, #f3f3f3 25%, #e0e0e0 50%, #f3f3f3 75%);
+                background-size: 200% 100%;
+                animation: shimmer 1.2s infinite linear;
+              }
+              @keyframes shimmer {
+                0% { background-position: -200% 0; }
+                100% { background-position: 200% 0; }
+              }
+              @media (max-width: 640px) {
+                .card-gradient, .card-gradient > * { border-radius: 1rem !important; }
+              }
+            `}</style>
           </CardContent>
         </Card>
 
@@ -497,8 +551,8 @@ const FieldsView = () => {
             style={{
               maxHeight: '90vh',
               overflowY: 'auto',
-              scrollbarWidth: 'none', // Firefox
-              msOverflowStyle: 'none', // IE 10+
+              scrollbarWidth: 'none',
+              msOverflowStyle: 'none',
             }}
           >
             <style>{`
@@ -513,23 +567,23 @@ const FieldsView = () => {
             
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="grid grid-cols-1 gap-4 w-full">
-                <FormField name="name" control={form.control} render={({ field }) => (
+            
+                <FormField name="description" control={form.control} render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-sm font-medium text-foreground">
-                      Field Name <span className="text-muted-foreground">(For Internal Use)</span>
+                      Field Name <span className="text-muted-foreground">(visible to client)</span>
                     </FormLabel>
                     <FormControl>
-                      <Input
-                        placeholder="Enter field name"
-                        {...field}
-                        required
-                        className="rounded-lg border-border/50 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
-                        onChange={e => {
-                          const formatted = e.target.value.toLowerCase().replace(/\s+/g, '-');
-                          field.onChange(formatted);
-                        }}
+                      <Textarea 
+                        placeholder="Enter field Name or instructions for users..." 
+                        {...field} 
+                        className="rounded-lg border-border/50 focus:border-primary focus:ring-2 focus:ring-primary/20 bg-accent/20 resize-none" 
+                        rows={3} 
                       />
                     </FormControl>
+                    <FormDescription className="text-xs">
+                      This helps users understand what information to provide
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )} />
@@ -582,44 +636,101 @@ const FieldsView = () => {
                   <FormField name="options" control={form.control} render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-sm font-medium text-foreground">
-                        Options <span className="text-muted-foreground">(press space, comma, or enter to add)</span>
+                        Options with Images
                       </FormLabel>
                       <FormControl>
-                        <div className="flex flex-wrap gap-2 items-center rounded-lg border border-border/50 p-3 bg-accent/20 min-h-[60px] focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 transition-all">
-                          {optionTags.map((tag, idx) => (
-                            <span key={idx} className="flex items-center bg-primary/10 text-primary rounded-md px-3 py-1 text-sm border border-primary/20">
-                              {tag}
-                              <button 
-                                type="button" 
-                                className="ml-2 text-sm text-primary hover:text-destructive transition-colors" 
-                                onClick={() => setOptionTags(optionTags.filter((_, i) => i !== idx))}
+                        <div className="space-y-4">
+                          {/* Add new option form */}
+                          <div className="border border-border/50 rounded-lg p-4 bg-accent/20">
+                            <div className="grid grid-cols-1 gap-3">
+                              <div>
+                                <label className="text-sm font-medium text-foreground mb-1 block">
+                                  Option Name *
+                                </label>
+                                <Input
+                                  placeholder="Enter option name"
+                                  value={currentOption.name}
+                                  onChange={(e) => setCurrentOption({...currentOption, name: e.target.value})}
+                                  className="rounded-lg border-border/50 focus:border-primary focus:ring-2 focus:ring-primary/20"
+                                />
+                              </div>
+                              <div>
+                                <label className="text-sm font-medium text-foreground mb-1 block">
+                                  Image URL <span className="text-muted-foreground">(optional)</span>
+                                </label>
+                                <Input
+                                  placeholder="https://example.com/image.png"
+                                  value={currentOption.image}
+                                  onChange={(e) => setCurrentOption({...currentOption, image: e.target.value})}
+                                  className="rounded-lg border-border/50 focus:border-primary focus:ring-2 focus:ring-primary/20"
+                                />
+                              </div>
+                              <Button
+                                type="button"
+                                onClick={handleAddOption}
+                                disabled={!currentOption.name.trim()}
+                                className="bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 hover:border-primary/40 w-full"
                               >
-                                ×
-                              </button>
-                            </span>
-                          ))}
-                          <input
-                            ref={optionInputRef}
-                            type="text"
-                            className="flex-1 min-w-[100px] border-none outline-none bg-transparent text-sm placeholder:text-muted-foreground"
-                            placeholder={optionTags.length === 0 ? 'Type and press space/comma/enter to add options' : 'Add another option...'}
-                            onKeyDown={e => {
-                              if ([" ", ",", "Enter"].includes(e.key) && optionInputRef.current) {
-                                const val = optionInputRef.current.value.trim();
-                                if (val && !optionTags.includes(val)) {
-                                  setOptionTags([...optionTags, val]);
-                                }
-                                optionInputRef.current.value = '';
-                                e.preventDefault();
-                              } else if (e.key === 'Backspace' && optionInputRef.current && optionInputRef.current.value === '' && optionTags.length > 0) {
-                                setOptionTags(optionTags.slice(0, -1));
-                              }
-                            }}
-                          />
+                                <Plus className="w-4 h-4 mr-2" />
+                                Add Option
+                              </Button>
+                            </div>
+                          </div>
+
+                          {/* Display added options */}
+                          {optionItems.length > 0 && (
+                            <div className="space-y-2">
+                              <label className="text-sm font-medium text-foreground">
+                                Added Options ({optionItems.length})
+                              </label>
+                              <div className="max-h-40 overflow-y-auto space-y-2 border border-border/50 rounded-lg p-3 bg-accent/10">
+                                {optionItems.map((option, idx) => (
+                                  <div key={idx} className="flex items-center justify-between p-3 bg-card rounded-lg border border-border/30">
+                                    <div className="flex items-center space-x-3 flex-1 min-w-0">
+                                      <div className="flex-1 min-w-0">
+                                        <div className="font-medium text-sm text-foreground truncate">
+                                          {option.name}
+                                        </div>
+                                        {option.image && (
+                                          <div className="flex items-center space-x-2 mt-1">
+                                            <ImageIcon className="w-3 h-3 text-muted-foreground flex-shrink-0" />
+                                            <span className="text-xs text-muted-foreground truncate">
+                                              {option.image}
+                                            </span>
+                                          </div>
+                                        )}
+                                      </div>
+                                      {option.image && (
+                                        <div className="flex-shrink-0">
+                                          <img
+                                            src={option.image}
+                                            alt={option.name}
+                                            className="w-8 h-8 object-cover rounded border"
+                                            onError={(e) => {
+                                              (e.target as HTMLImageElement).style.display = 'none';
+                                            }}
+                                          />
+                                        </div>
+                                      )}
+                                    </div>
+                                    <Button
+                                      type="button"
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => handleRemoveOption(idx)}
+                                      className="ml-2 flex-shrink-0 border-destructive/20 hover:border-destructive/40 hover:bg-destructive/5 text-destructive"
+                                    >
+                                      <Trash2 className="w-3 h-3" />
+                                    </Button>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
                         </div>
                       </FormControl>
                       <FormDescription className="text-xs">
-                        Each option becomes a selectable choice for this field
+                        Add options with optional images. Each option becomes a selectable choice for this field.
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
@@ -644,22 +755,25 @@ const FieldsView = () => {
                   )} />
                 )}
 
-                <FormField name="description" control={form.control} render={({ field }) => (
+
+
+                    <FormField name="name" control={form.control} render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-sm font-medium text-foreground">
-                      Description <span className="text-muted-foreground">(visible to client)</span>
+                      Key Name <span className="text-muted-foreground">(For Internal Use)</span>
                     </FormLabel>
                     <FormControl>
-                      <Textarea 
-                        placeholder="Enter field description or instructions for users..." 
-                        {...field} 
-                        className="rounded-lg border-border/50 focus:border-primary focus:ring-2 focus:ring-primary/20 bg-accent/20 resize-none" 
-                        rows={3} 
+                      <Input
+                        placeholder="Enter Key name or You can copy from Field Name"
+                        {...field}
+                        required
+                        className="rounded-lg border-border/50 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+                        onChange={e => {
+                          const formatted = e.target.value.toLowerCase().replace(/\s+/g, '-');
+                          field.onChange(formatted);
+                        }}
                       />
                     </FormControl>
-                    <FormDescription className="text-xs">
-                      This helps users understand what information to provide
-                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )} />
@@ -683,6 +797,31 @@ const FieldsView = () => {
                 </DialogFooter>
               </form>
             </Form>
+          </DialogContent>
+        </Dialog>
+
+        {/* Delete Confirmation Dialog */}
+        <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Delete Field</DialogTitle>
+            </DialogHeader>
+            <div className="py-4">
+              Are you sure you want to delete <span className="font-semibold">{deleteTargetName}</span>?
+              This action cannot be undone.
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={confirmDeleteField}
+                className="bg-red-600 hover:bg-red-700"
+              >
+                Yes, Delete
+              </Button>
+            </DialogFooter>
           </DialogContent>
         </Dialog>
       </main>

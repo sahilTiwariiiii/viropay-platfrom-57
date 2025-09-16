@@ -357,9 +357,7 @@ const CategoryView = () => {
 									<h2 className="text-2xl font-bold text-gray-800 mb-2">
 										Category Management
 									</h2>
-									<p className="text-gray-600">
-										Organize and manage your categories efficiently
-									</p>
+									
 								</div>
 								
 								<div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
