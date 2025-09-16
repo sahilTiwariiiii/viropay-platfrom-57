@@ -1,3 +1,4 @@
+import React from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -25,6 +26,7 @@ import AddCategory from "./pages/AddCategory";
 import LeadsBySubCategory from "./pages/LeadsBySubCategory";
 import ClientManage from "./pages/ClientManage";
 import ClientLeadTransfersPage from "./pages/ClientLeadTransfersPage";
+import MyLeads from "./pages/MyLeads";
 // import AllSubCategory from "./components/AllSubCategory";
 
 // Create a layout component that includes the sidebar
@@ -47,45 +49,61 @@ const RedirectToCategory = () => {
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner position="top-right" />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/" element={<RedirectToCategory />} />
-          {/* <Route path="/" element={<AllSubCategory />} /> */}
-          <Route element={<RequireAuth />}>
-            <Route path="/" element={<AppLayout />}>
-              <Route path="dashboard" element={<Dashboard />} />
-              <Route path="applications" element={<Applications />} />
-              <Route path="applications/add" element={<AddApplication />} />
-              <Route path="application/:id" element={<ApplicationDetails />} />
-              <Route path="discovery" element={<Discovery />} />
-              <Route path="integrations" element={<Integrations />} />
-              <Route path="settings" element={<Settings />} />
-              <Route path="calendar" element={<Calendar />} />
-              <Route path="calendar/add" element={<Calendar />} />
-              <Route path="categories" element={<CategoryView />} />
-              <Route path="category" element={<CategoryView />} />
-              <Route path="category/add" element={<AddCategory />} />
-              <Route path="subcategories" element={<ViewSubCategories />} />
-              <Route path="subcategories/add" element={<AddSubCategory />} />
-              <Route path="procurement" element={<Procurement />} />
-              <Route path="fields" element={<Fields />} />
-              <Route path="fields/view" element={<FieldsView />} />
-              <Route path="leadsbysubcategory" element={<LeadsBySubCategory />} />
-              <Route path="client-manage" element={<ClientManage />} />
-              <Route path="client-lead-transfers/:clientId" element={<ClientLeadTransfersPage />} />
-              <Route path="*" element={<NotFound />} />
+
+// Helper to get user role from localStorage
+const getUserRole = () => {
+  return localStorage.getItem('role');
+};
+
+const App = () => {
+  const role = getUserRole();
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner position="top-right" />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route path="/" element={<Navigate to={role === 'client' ? '/my-leads' : '/category'} replace />} />
+            <Route element={<RequireAuth />}>
+              {role === 'client' ? (
+                <Route path="/my-leads" element={<AppLayout />}>
+                  <Route index element={<MyLeads />} />
+                  <Route path="*" element={<Navigate to="/my-leads" replace />} />
+                </Route>
+              ) : (
+                <Route path="/" element={<AppLayout />}>
+                  <Route path="dashboard" element={<Dashboard />} />
+                  <Route path="applications" element={<Applications />} />
+                  <Route path="applications/add" element={<AddApplication />} />
+                  <Route path="application/:id" element={<ApplicationDetails />} />
+                  <Route path="discovery" element={<Discovery />} />
+                  <Route path="integrations" element={<Integrations />} />
+                  <Route path="settings" element={<Settings />} />
+                  <Route path="calendar" element={<Calendar />} />
+                  <Route path="calendar/add" element={<Calendar />} />
+                  <Route path="categories" element={<CategoryView />} />
+                  <Route path="category" element={<CategoryView />} />
+                  <Route path="category/add" element={<AddCategory />} />
+                  <Route path="subcategories" element={<ViewSubCategories />} />
+                  <Route path="subcategories/add" element={<AddSubCategory />} />
+                  <Route path="procurement" element={<Procurement />} />
+                  <Route path="fields" element={<Fields />} />
+                  <Route path="fields/view" element={<FieldsView />} />
+                  <Route path="leadsbysubcategory" element={<LeadsBySubCategory />} />
+                  <Route path="client-manage" element={<ClientManage />} />
+                  <Route path="client-lead-transfers/:clientId" element={<ClientLeadTransfersPage />} />
+                  <Route path="my-leads" element={<MyLeads />} />
+                  <Route path="*" element={<NotFound />} />
+                </Route>
+              )}
             </Route>
-          </Route>
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;
