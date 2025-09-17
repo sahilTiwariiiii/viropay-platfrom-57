@@ -24,7 +24,7 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({
   const pathname = location.pathname;
 
   return (
-    <div className="mt-4 px-3 space-y-1">
+    <div className="mt-2 px-4 space-y-1">
       {categories.map((category, categoryIndex) => {
         const filteredItems = category.items.filter(item => 
           category.filterFn(item, searchTerm)
@@ -33,14 +33,14 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({
         if (filteredItems.length === 0) return null;
 
         return (
-          <div key={`category-${categoryIndex}`} className="mb-4">
-            <div className="mt-2 mb-2">
-              <p className="text-xs font-semibold text-gray-500 px-0 uppercase tracking-wider whitespace-nowrap">
+          <div key={`category-${categoryIndex}`} className="mb-3">
+            <div className="mt-2 mb-1.5">
+              <p className="text-xs font-medium text-gray-500 px-0 uppercase tracking-wider whitespace-nowrap">
                 {category.title}
               </p>
             </div>
             
-            <div className="space-y-1">
+            <div className="space-y-0.5">
               {filteredItems.map((item, itemIndex) => {
                 const isActive = pathname === item.href || 
                   (item.href !== '/' && pathname.startsWith(item.href));
